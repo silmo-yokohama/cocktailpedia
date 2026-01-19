@@ -100,17 +100,32 @@ Ph9. 保守
 ```
 project-root/
 ├── .agent/
-│   └── workflows/          # フェーズごとのワークフロー（ph-X-xxx.md）
+│   ├── workflows/          # フェーズごとのワークフロー（ph-X-xxx.md）
+│   └── rules/              # ルール定義（コミット等）
+├── .ai/                    # ※ Gitにコミットしない
+│   ├── input/              # ユーザーからの一時的なインプット資料
+│   └── output/             # AGの出力結果
+├── .tmp/                   # ※ Gitにコミットしない（テンポラリファイル）
 ├── docs/
 │   ├── _templates/         # 成果物テンプレート
-│   ├── planning/           # Ph1 成果物
-│   ├── requirements/       # Ph2 成果物
-│   ├── tech-stack/         # Ph3 成果物
+│   ├── project_overview.md # Ph1 成果物
+│   ├── 02_requirements/    # Ph2 成果物
+│   ├── 03-tech-stack/      # Ph3 成果物
 │   ├── guidelines/         # Ph4 成果物
-│   ├── design/             # Ph5 成果物
+│   ├── 05-design/          # Ph5 成果物
 │   └── implementation/     # Ph6 成果物（実装計画書）
 └── src/                    # ソースコード
 ```
+
+#### .ai/ と .tmp/ の使い分け
+
+| ディレクトリ | 用途 | 例 |
+|-------------|------|-----|
+| `.ai/input/` | ユーザーが一時的に参照資料を置く | 参考ドキュメント、画像素材 |
+| `.ai/output/` | AGが生成した一時ファイルを置く | 調査結果、分析レポート |
+| `.tmp/` | 処理中のテンポラリファイル | diff出力、ワークファイル |
+
+※ これらのディレクトリはGitにコミットしない（.gitignoreで除外）
 
 ---
 
