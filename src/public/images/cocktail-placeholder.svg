@@ -1,0 +1,28 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="400" height="400" fill="#1a1612"/>
+
+  <!-- 装飾パターン -->
+  <pattern id="art-deco-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M20 0L40 20L20 40L0 20L20 0Z" stroke="oklch(0.75 0.14 75)" stroke-width="0.5" fill="none" opacity="0.1"/>
+  </pattern>
+  <rect width="400" height="400" fill="url(#art-deco-pattern)"/>
+
+  <!-- 中央のカクテルグラスアイコン -->
+  <g transform="translate(200, 180)">
+    <!-- グラス本体 -->
+    <path d="M-60 -80L0 40L60 -80H-60Z" fill="none" stroke="oklch(0.75 0.14 75)" stroke-width="2" opacity="0.4"/>
+
+    <!-- グラスの脚 -->
+    <path d="M0 40V100" stroke="oklch(0.75 0.14 75)" stroke-width="2" opacity="0.4"/>
+
+    <!-- グラスのベース -->
+    <path d="M-40 100H40" stroke="oklch(0.75 0.14 75)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- 装飾のダイヤモンド -->
+    <path d="M0 -100L15 -85L0 -70L-15 -85L0 -100Z" fill="oklch(0.75 0.14 75)" opacity="0.3"/>
+  </g>
+
+  <!-- テキスト「No Image」 -->
+  <text x="200" y="320" text-anchor="middle" fill="oklch(0.75 0.14 75)" opacity="0.3" font-family="serif" font-size="18" letter-spacing="4">NO IMAGE</text>
+</svg>
