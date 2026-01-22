@@ -135,96 +135,89 @@ export function Header({ onSearchClick, className }: HeaderProps) {
                 className={cn(
                   "w-[280px] sm:w-[320px]",
                   "bg-background/95 backdrop-blur-xl",
-                  "border-l border-border/30"
+                  "border-l border-gold/10"
                 )}
               >
-                <SheetHeader>
-                  <SheetTitle className="text-left">
-                    <Logo size="sm" linkToHome={false} />
-                  </SheetTitle>
+                {/* ヘッダー部分（アクセシビリティ用のタイトル - 非表示） */}
+                <SheetHeader className="sr-only">
+                  <SheetTitle>メニュー</SheetTitle>
                 </SheetHeader>
 
-                {/* モバイルナビゲーション */}
-                <nav className="flex flex-col gap-1 mt-8" aria-label="メインナビゲーション">
+                {/* お気に入りへの導線（目立つボタン） */}
+                <div className="pt-4 pb-6">
+                  <Link
+                    href="/favorites"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={cn(
+                      "flex items-center justify-center gap-3 w-full py-4 rounded-lg",
+                      "bg-gold/10 border border-gold/20",
+                      "text-gold font-medium",
+                      "hover:bg-gold/15 hover:border-gold/30",
+                      "transition-all duration-200",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+                    )}
+                  >
+                    <Heart className="w-5 h-5" />
+                    <span>お気に入り一覧</span>
+                  </Link>
+                </div>
+
+                {/* 区切り線と装飾 */}
+                <div className="flex items-center gap-3 py-2">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border/50" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-gold/30">
+                    <path d="M8 0L10 6L16 8L10 10L8 16L6 10L0 8L6 6L8 0Z" fill="currentColor" />
+                  </svg>
+                  <div className="flex-1 h-px bg-gradient-to-l from-transparent to-border/50" />
+                </div>
+
+                {/* ベース別ナビゲーション */}
+                <nav className="flex flex-col gap-1 py-4" aria-label="ベース別ナビゲーション">
                   <p className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     ベースで探す
                   </p>
-                  {MAIN_BASE_OPTIONS.map((option, index) => (
+                  {MAIN_BASE_OPTIONS.map((option) => (
                     <Link
                       key={option.value}
                       href={`/filter/${option.value}`}
                       onClick={() => setIsMenuOpen(false)}
                       className={cn(
-                        // ベーススタイル
-                        "px-3 py-3 text-base font-medium rounded-md",
-                        // カラー
-                        "text-foreground/80 hover:text-gold",
-                        // 背景
-                        "hover:bg-gold/5",
-                        // トランジション
+                        "flex items-center gap-3 px-3 py-3 rounded-md",
+                        "text-foreground font-medium",
+                        "hover:bg-gold/5 hover:text-gold",
                         "transition-all duration-200",
-                        // アニメーション
-                        "opacity-0 animate-in fade-in-0 slide-in-from-right-4",
-                        // フォーカス
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
                       )}
-                      style={{
-                        animationDelay: `${index * 50}ms`,
-                        animationFillMode: "forwards",
-                      }}
                     >
+                      {/* ベースごとのアイコン装飾 */}
+                      <span className="w-2 h-2 rounded-full bg-gold/40" />
                       {option.label}
                     </Link>
                   ))}
-
-                  {/* 区切り線 */}
-                  <div className="my-4 border-t border-border/30" />
-
-                  {/* お気に入りリンク */}
-                  <Link
-                    href="/favorites"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={cn(
-                      // ベーススタイル
-                      "flex items-center gap-3 px-3 py-3 text-base font-medium rounded-md",
-                      // カラー
-                      "text-foreground/80 hover:text-gold",
-                      // 背景
-                      "hover:bg-gold/5",
-                      // トランジション
-                      "transition-all duration-200",
-                      // アニメーション
-                      "opacity-0 animate-in fade-in-0 slide-in-from-right-4"
-                    )}
-                    style={{
-                      animationDelay: `${MAIN_BASE_OPTIONS.length * 50 + 50}ms`,
-                      animationFillMode: "forwards",
-                    }}
-                  >
-                    <Heart className="w-5 h-5" />
-                    お気に入り
-                  </Link>
                 </nav>
 
-                {/* Art Deco風の装飾 */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+                {/* 下部の装飾 */}
+                <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                   <svg
-                    width="60"
-                    height="30"
-                    viewBox="0 0 60 30"
+                    width="100"
+                    height="24"
+                    viewBox="0 0 100 24"
                     fill="none"
-                    className="opacity-20"
+                    className="text-gold/15"
                   >
+                    {/* 中央のダイヤモンド */}
                     <path
-                      d="M30 0L45 15L30 30L15 15L30 0Z"
-                      stroke="oklch(0.75 0.14 75)"
+                      d="M50 4L56 12L50 20L44 12L50 4Z"
+                      stroke="currentColor"
                       strokeWidth="1"
+                      fill="none"
                     />
-                    <path
-                      d="M0 15H15M45 15H60"
-                      stroke="oklch(0.75 0.14 75)"
-                      strokeWidth="1"
-                    />
+                    {/* 左側のライン */}
+                    <path d="M0 12H40" stroke="currentColor" strokeWidth="1" />
+                    <circle cx="20" cy="12" r="2" fill="currentColor" />
+                    {/* 右側のライン */}
+                    <path d="M60 12H100" stroke="currentColor" strokeWidth="1" />
+                    <circle cx="80" cy="12" r="2" fill="currentColor" />
                   </svg>
                 </div>
               </SheetContent>
