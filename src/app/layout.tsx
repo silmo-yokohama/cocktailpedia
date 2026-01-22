@@ -3,6 +3,7 @@ import { Noto_Sans_JP, Playfair_Display } from "next/font/google"
 
 import { Footer } from "@/components/organisms/Footer"
 import { Header } from "@/components/organisms/Header"
+import { AppProviders } from "@/components/providers/AppProviders"
 
 import "./globals.css"
 
@@ -125,12 +126,14 @@ export default function RootLayout({
         {/* Google Analytics 4（条件付き読み込み） */}
         <GoogleAnalytics />
 
-        {/* ページ構造 */}
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        {/* プロバイダーとページ構造 */}
+        <AppProviders>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </AppProviders>
       </body>
     </html>
   )
