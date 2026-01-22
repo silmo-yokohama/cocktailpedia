@@ -13,12 +13,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useSearchModal } from "@/contexts/SearchModalContext"
 import { cn } from "@/lib/utils"
 import { MAIN_BASE_OPTIONS } from "@/types"
 
 interface HeaderProps {
-  /** 検索モーダルを開くコールバック（タスク4で実装） */
-  onSearchClick?: () => void
   /** 追加のクラス名 */
   className?: string
 }
@@ -27,7 +26,9 @@ interface HeaderProps {
  * ヘッダーコンポーネント
  * ロゴ、ベース別ナビ、お気に入り・検索アイコンを含む
  */
-export function Header({ onSearchClick, className }: HeaderProps) {
+export function Header({ className }: HeaderProps) {
+  // 検索モーダルの状態を取得
+  const { open: openSearchModal } = useSearchModal()
   // モバイルメニューの開閉状態
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -97,7 +98,7 @@ export function Header({ onSearchClick, className }: HeaderProps) {
             {/* 検索アイコン */}
             <button
               type="button"
-              onClick={onSearchClick}
+              onClick={() => openSearchModal()}
               className={cn(
                 // ベーススタイル
                 "flex items-center justify-center w-10 h-10 rounded-full",
