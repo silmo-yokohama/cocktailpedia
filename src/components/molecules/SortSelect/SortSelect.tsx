@@ -63,10 +63,7 @@ export function SortSelect({ value, onChange, className }: SortSelectProps) {
         )}
         aria-label="並び替え"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-gold/70">{getSortIcon(value)}</span>
-          <SelectValue placeholder="並び替え" />
-        </div>
+        <SelectValue placeholder="並び替え" />
       </SelectTrigger>
       <SelectContent
         className={cn(

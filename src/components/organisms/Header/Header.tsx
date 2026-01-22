@@ -133,10 +133,9 @@ export function Header({ onSearchClick, className }: HeaderProps) {
               <SheetContent
                 side="right"
                 className={cn(
-                  "w-[260px] sm:w-[300px]",
-                  "bg-background/98 backdrop-blur-xl",
-                  "border-l border-gold/10",
-                  "p-0"
+                  "w-[280px] sm:w-[320px]",
+                  "bg-[#1a1612] border-l-0",
+                  "p-0 overflow-hidden"
                 )}
               >
                 {/* アクセシビリティ用のタイトル（非表示） */}
@@ -144,39 +143,52 @@ export function Header({ onSearchClick, className }: HeaderProps) {
                   <SheetTitle>メニュー</SheetTitle>
                 </SheetHeader>
 
+                {/* Art Deco風の左ボーダー装飾 */}
+                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-gold/0 via-gold/40 to-gold/0" />
+
                 {/* メニューコンテンツ */}
-                <div className="flex flex-col h-full px-4 py-6">
+                <div className="flex flex-col h-full pt-16 pb-8 px-6">
+                  {/* ヘッダー装飾 */}
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/30" />
+                    <svg width="12" height="12" viewBox="0 0 12 12" className="text-gold/50">
+                      <path d="M6 0L7.5 4.5L12 6L7.5 7.5L6 12L4.5 7.5L0 6L4.5 4.5L6 0Z" fill="currentColor" />
+                    </svg>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/30" />
+                  </div>
+
                   {/* ベース別ナビゲーション */}
                   <nav className="flex flex-col" aria-label="ベース別ナビゲーション">
-                    <p className="px-2 pb-3 text-[10px] font-semibold text-gold/60 uppercase tracking-[0.2em]">
-                      Base Spirits
+                    <p
+                      className="mb-4 text-[11px] font-medium tracking-[0.25em] text-gold/60"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      BASE SPIRITS
                     </p>
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       {MAIN_BASE_OPTIONS.map((option) => (
                         <Link
                           key={option.value}
                           href={`/filter/${option.value}`}
                           onClick={() => setIsMenuOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 px-2 py-2.5 rounded",
-                            "text-sm text-foreground/80",
-                            "hover:bg-gold/5 hover:text-gold",
-                            "transition-colors duration-150",
-                            "focus:outline-none focus-visible:ring-1 focus-visible:ring-gold/50"
+                            "group flex items-center gap-4 py-3 px-4 -mx-4",
+                            "text-[15px] text-foreground/70",
+                            "hover:text-gold hover:bg-gold/[0.03]",
+                            "transition-all duration-200",
+                            "focus:outline-none focus-visible:text-gold"
                           )}
                         >
-                          <span className="w-1 h-1 rounded-full bg-gold/50" />
-                          {option.label}
+                          <span className="w-1.5 h-1.5 rotate-45 border border-gold/30 group-hover:border-gold/60 group-hover:bg-gold/20 transition-all duration-200" />
+                          <span className="tracking-wide">{option.label}</span>
                         </Link>
                       ))}
                     </div>
                   </nav>
 
-                  {/* 区切り */}
-                  <div className="flex items-center gap-4 my-5">
-                    <div className="flex-1 h-px bg-border/30" />
-                    <span className="text-gold/20 text-[10px]">◆</span>
-                    <div className="flex-1 h-px bg-border/30" />
+                  {/* 区切りライン */}
+                  <div className="flex items-center gap-4 my-8">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
                   </div>
 
                   {/* お気に入りリンク */}
@@ -184,33 +196,34 @@ export function Header({ onSearchClick, className }: HeaderProps) {
                     href="/favorites"
                     onClick={() => setIsMenuOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-2 py-2.5 rounded",
-                      "text-sm text-gold/80",
-                      "hover:bg-gold/5 hover:text-gold",
-                      "transition-colors duration-150",
-                      "focus:outline-none focus-visible:ring-1 focus-visible:ring-gold/50"
+                      "group flex items-center gap-4 py-3 px-4 -mx-4",
+                      "text-[15px] text-foreground/70",
+                      "hover:text-gold hover:bg-gold/[0.03]",
+                      "transition-all duration-200",
+                      "focus:outline-none focus-visible:text-gold"
                     )}
                   >
-                    <Heart className="w-4 h-4" />
-                    <span>お気に入り</span>
+                    <Heart className="w-4 h-4 text-gold/50 group-hover:text-gold transition-colors duration-200" />
+                    <span className="tracking-wide">お気に入り</span>
                   </Link>
 
                   {/* 下部のスペーサー */}
                   <div className="flex-1" />
 
-                  {/* 下部の装飾 */}
-                  <div className="flex justify-center pt-4 pb-2">
-                    <svg
-                      width="80"
-                      height="16"
-                      viewBox="0 0 80 16"
-                      fill="none"
-                      className="text-gold/10"
-                    >
-                      <path d="M0 8H32" stroke="currentColor" strokeWidth="0.5" />
-                      <path d="M40 2L44 8L40 14L36 8L40 2Z" stroke="currentColor" strokeWidth="0.5" fill="none" />
-                      <path d="M48 8H80" stroke="currentColor" strokeWidth="0.5" />
+                  {/* フッター装飾 */}
+                  <div className="flex flex-col items-center gap-4 pt-6">
+                    <svg width="60" height="24" viewBox="0 0 60 24" fill="none" className="text-gold/15">
+                      <path d="M0 12H20" stroke="currentColor" strokeWidth="0.5" />
+                      <path d="M30 4L35 12L30 20L25 12L30 4Z" stroke="currentColor" strokeWidth="0.5" />
+                      <circle cx="30" cy="12" r="2" fill="currentColor" />
+                      <path d="M40 12H60" stroke="currentColor" strokeWidth="0.5" />
                     </svg>
+                    <p
+                      className="text-[9px] tracking-[0.3em] text-gold/20"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      COCKTAILPEDIA
+                    </p>
                   </div>
                 </div>
               </SheetContent>
