@@ -51,64 +51,90 @@ export function Logo({ size = "md", linkToHome = true, showText = true, classNam
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full transition-transform duration-300 group-hover:scale-105"
         >
-          {/* 背景の装飾円 */}
-          <circle
+          {/* グラデーション定義 */}
+          <defs>
+            <linearGradient id="logo-gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.85 0.12 75)" />
+              <stop offset="50%" stopColor="oklch(0.75 0.14 75)" />
+              <stop offset="100%" stopColor="oklch(0.62 0.15 70)" />
+            </linearGradient>
+            <linearGradient id="logo-gold-stem" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.75 0.14 75)" />
+              <stop offset="100%" stopColor="oklch(0.65 0.15 70)" />
+            </linearGradient>
+          </defs>
+
+          {/* Art Deco風 外枠の八角形 */}
+          <path
+            d="M20 2L32 8V18L26 26H14L8 18V8L20 2Z"
+            stroke="url(#logo-gold-gradient)"
+            strokeWidth="0.75"
+            opacity="0.25"
+            fill="none"
+            className="transition-opacity duration-300 group-hover:opacity-40"
+          />
+
+          {/* カクテルグラスのボウル部分 - 面で描画 */}
+          <path
+            d="M8 7H32L20 23L8 7Z"
+            fill="url(#logo-gold-gradient)"
+          />
+
+          {/* グラスの液面ハイライト */}
+          <path
+            d="M11 9H29L20 20L11 9Z"
+            fill="oklch(0.2 0.02 45)"
+            opacity="0.15"
+          />
+
+          {/* グラスの縁のハイライト */}
+          <path
+            d="M9 7.5H31"
+            stroke="oklch(0.9 0.08 75)"
+            strokeWidth="0.5"
+            opacity="0.6"
+          />
+
+          {/* グラスの脚 - 台形で面として描画 */}
+          <path
+            d="M17.5 23H22.5L21.5 31H18.5L17.5 23Z"
+            fill="url(#logo-gold-stem)"
+          />
+
+          {/* 脚の中央ハイライト */}
+          <path
+            d="M19.5 24V30"
+            stroke="oklch(0.9 0.08 75)"
+            strokeWidth="0.5"
+            opacity="0.4"
+          />
+
+          {/* グラスのベース - 楕円形で面として描画 */}
+          <ellipse
             cx="20"
-            cy="20"
-            r="18"
-            stroke="url(#gold-gradient)"
-            strokeWidth="1"
+            cy="33"
+            rx="8"
+            ry="2.5"
+            fill="url(#logo-gold-gradient)"
+          />
+
+          {/* ベースの上面ハイライト */}
+          <ellipse
+            cx="20"
+            cy="32"
+            rx="6"
+            ry="1.5"
+            fill="oklch(0.85 0.10 75)"
+            opacity="0.5"
+          />
+
+          {/* Art Deco装飾 - グラス内の幾何学模様 */}
+          <path
+            d="M20 11L23 15L20 19L17 15L20 11Z"
+            fill="oklch(0.9 0.08 75)"
             opacity="0.3"
             className="transition-opacity duration-300 group-hover:opacity-50"
           />
-
-          {/* カクテルグラスのシルエット */}
-          <path
-            d="M10 8L20 22L30 8H10Z"
-            fill="url(#gold-gradient)"
-            className="transition-all duration-300"
-          />
-
-          {/* グラスの液面ライン */}
-          <path
-            d="M12 10L20 20L28 10"
-            stroke="oklch(0.12 0.015 45)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            opacity="0.3"
-          />
-
-          {/* グラスの脚 */}
-          <path
-            d="M20 22V32"
-            stroke="url(#gold-gradient)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-
-          {/* グラスのベース */}
-          <path
-            d="M14 32H26"
-            stroke="url(#gold-gradient)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-
-          {/* 装飾のダイヤモンド */}
-          <path
-            d="M20 4L22 6L20 8L18 6L20 4Z"
-            fill="url(#gold-gradient)"
-            className="transition-transform duration-300 group-hover:scale-110 origin-center"
-          />
-
-          {/* グラデーション定義 */}
-          <defs>
-            <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="oklch(0.82 0.12 75)" />
-              <stop offset="50%" stopColor="oklch(0.75 0.14 75)" />
-              <stop offset="100%" stopColor="oklch(0.6 0.15 70)" />
-            </linearGradient>
-          </defs>
         </svg>
 
         {/* ホバー時のグロー効果 */}
