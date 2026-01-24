@@ -70,28 +70,20 @@ export function RecentlyViewedSection({ favoriteIds = new Set(), onFavoriteToggl
       <SectionTitle>最近見たカクテル</SectionTitle>
 
       {/* カクテル一覧（横スクロール） */}
-      <div className="relative">
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gold/20 scrollbar-track-transparent">
-          {cocktails.map((cocktail, index) => (
-            <div
-              key={cocktail.id}
-              className="flex-shrink-0 w-36 sm:w-44"
-            >
-              <CocktailCard
-                cocktail={cocktail}
-                isFavorite={favoriteIds.has(cocktail.id)}
-                onFavoriteToggle={onFavoriteToggle}
-                animationDelay={index * 50}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* フェードエフェクト（右端） */}
-        <div
-          className="absolute top-0 right-0 bottom-4 w-12 pointer-events-none bg-gradient-to-l from-background to-transparent"
-          aria-hidden="true"
-        />
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gold/20 scrollbar-track-transparent">
+        {cocktails.map((cocktail, index) => (
+          <div
+            key={cocktail.id}
+            className="flex-shrink-0 w-36 sm:w-44"
+          >
+            <CocktailCard
+              cocktail={cocktail}
+              isFavorite={favoriteIds.has(cocktail.id)}
+              onFavoriteToggle={onFavoriteToggle}
+              animationDelay={index * 50}
+            />
+          </div>
+        ))}
       </div>
     </section>
   )

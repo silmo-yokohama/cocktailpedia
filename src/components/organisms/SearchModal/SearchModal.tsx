@@ -1,8 +1,8 @@
 "use client"
 
-import { Search, X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { Check, ChevronDown, Search, X } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { getSearchableIngredients } from "@/actions/cocktails"
 import { GlassIcon } from "@/components/atoms/icons"
@@ -25,6 +25,7 @@ import {
   COLOR_OPTIONS,
   filtersToSearchParams,
   GLASS_OPTIONS,
+  searchParamsToFilters,
   type SearchFilters,
   TECHNIQUE_OPTIONS,
   TEMPERATURE_OPTIONS,
@@ -36,6 +37,7 @@ import {
  */
 export function SearchModal() {
   const router = useRouter()
+  const urlSearchParams = useSearchParams()
   const { isOpen, close, initialBase } = useSearchModal()
 
   // 検索条件の状態
@@ -45,6 +47,38 @@ export function SearchModal() {
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false)
   // 材料読み込み済みフラグ
   const ingredientsLoadedRef = useRef(false)
+  // 初期化済みフラグ（モーダルを開いた時に一度だけURLから復元）
+  const initializedRef = useRef(false)
+
+  // モーダルが開いた時にURLパラメータから検索条件を復元し、材料を読み込む
+  useEffect(() => {
+    if (isOpen && !initializedRef.current) {
+      const restoredFilters = searchParamsToFilters(urlSearchParams)
+      setFilters(restoredFilters)
+      initializedRef.current = true
+
+      // 材料をまだ読み込んでいない場合は読み込む
+      if (!ingredientsLoadedRef.current) {
+        const loadIngredients = async () => {
+          setIsLoadingIngredients(true)
+          try {
+            const data = await getSearchableIngredients()
+            setIngredients(data)
+            ingredientsLoadedRef.current = true
+          } catch (error) {
+            console.error("材料の取得に失敗しました:", error)
+          } finally {
+            setIsLoadingIngredients(false)
+          }
+        }
+        loadIngredients()
+      }
+    }
+    if (!isOpen) {
+      // モーダルが閉じたら初期化フラグをリセット
+      initializedRef.current = false
+    }
+  }, [isOpen, urlSearchParams])
 
   // 初期ベースをフィルターに適用
   const activeFilters = useMemo((): SearchFilters => {
@@ -55,38 +89,16 @@ export function SearchModal() {
   }, [filters, initialBase])
 
   /**
-   * 材料一覧を取得
-   */
-  const loadIngredients = useCallback(async () => {
-    if (ingredientsLoadedRef.current || isLoadingIngredients) return
-
-    setIsLoadingIngredients(true)
-    try {
-      const data = await getSearchableIngredients()
-      setIngredients(data)
-      ingredientsLoadedRef.current = true
-    } catch (error) {
-      console.error("材料の取得に失敗しました:", error)
-    } finally {
-      setIsLoadingIngredients(false)
-    }
-  }, [isLoadingIngredients])
-
-  /**
    * モーダルの開閉ハンドラー
    */
   const handleOpenChange = useCallback(
     (open: boolean) => {
-      if (open) {
-        // 開くときに材料を読み込む
-        loadIngredients()
-      } else {
-        // 閉じるときにフィルターをリセット
-        setFilters({})
+      if (!open) {
+        // 閉じるときはフィルターを保持（リセットしない）
         close()
       }
     },
-    [close, loadIngredients]
+    [close]
   )
 
   /**
@@ -135,7 +147,7 @@ export function SearchModal() {
   const handleSearch = useCallback(() => {
     const params = filtersToSearchParams(activeFilters)
     router.push(`/?${params.toString()}`)
-    setFilters({})
+    // フィルターは保持したまま閉じる（次回開いた時にURLから復元される）
     close()
   }, [activeFilters, router, close])
 
@@ -143,11 +155,12 @@ export function SearchModal() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-2xl max-h-[90vh] overflow-y-auto",
+          "max-w-2xl max-h-[90vh] flex flex-col",
           "bg-background border-border/30"
         )}
       >
-        <DialogHeader>
+        {/* ヘッダー（固定） */}
+        <DialogHeader className="flex-shrink-0 pb-4 border-b border-border/30">
           <DialogTitle
             className="text-xl font-bold text-foreground"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
@@ -156,146 +169,144 @@ export function SearchModal() {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* フリーワード検索 */}
-          <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-2">
-              フリーワード
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-              <Input
-                type="text"
-                placeholder="カクテル名で検索..."
-                value={activeFilters.keyword || ""}
-                onChange={(e) => updateFilter("keyword", e.target.value || undefined)}
-                className="pl-10 bg-card border-border/30 focus:border-gold/50 focus:ring-gold/20"
-              />
-            </div>
-          </div>
-
-          {/* ベース */}
-          <FilterSection title="ベース">
-            <div className="flex flex-wrap gap-2">
-              {BASE_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.base === option.value}
-                  onClick={() => toggleSingleSelect("base", option.value as SearchFilters["base"])}
+        {/* スクロール可能なコンテンツエリア */}
+        <div className="flex-1 overflow-y-auto min-h-0 py-4 -mx-6 px-6">
+          <div className="space-y-6">
+            {/* フリーワード検索 */}
+            <div>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">
+                フリーワード
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                <Input
+                  type="text"
+                  placeholder="カクテル名で検索..."
+                  value={activeFilters.keyword || ""}
+                  onChange={(e) => updateFilter("keyword", e.target.value || undefined)}
+                  className="pl-10 bg-card border-border/30 focus:border-gold/50 focus:ring-gold/20"
                 />
-              ))}
+              </div>
             </div>
-          </FilterSection>
 
-          {/* 技法 */}
-          <FilterSection title="技法">
-            <div className="flex flex-wrap gap-2">
-              {TECHNIQUE_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.technique === option.value}
-                  onClick={() => toggleSingleSelect("technique", option.value as SearchFilters["technique"])}
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* 度数 */}
-          <FilterSection title="度数">
-            <div className="flex flex-wrap gap-2">
-              {ALCOHOL_STRENGTH_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.alcoholStrength === option.value}
-                  onClick={() =>
-                    toggleSingleSelect("alcoholStrength", option.value as SearchFilters["alcoholStrength"])
-                  }
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* グラス */}
-          <FilterSection title="グラス">
-            <div className="flex flex-wrap gap-2">
-              {GLASS_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.glass === option.value}
-                  onClick={() => toggleSingleSelect("glass", option.value as SearchFilters["glass"])}
-                  icon={<GlassIcon glass={option.value} size={16} />}
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* 冷たさ */}
-          <FilterSection title="冷たさ">
-            <div className="flex flex-wrap gap-2">
-              {TEMPERATURE_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.temperature === option.value}
-                  onClick={() => toggleSingleSelect("temperature", option.value as SearchFilters["temperature"])}
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* 炭酸 */}
-          <FilterSection title="炭酸">
-            <div className="flex flex-wrap gap-2">
-              {CARBONATION_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.carbonation === option.value}
-                  onClick={() => toggleSingleSelect("carbonation", option.value as SearchFilters["carbonation"])}
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* カラー */}
-          <FilterSection title="カラー">
-            <div className="flex flex-wrap gap-2">
-              {COLOR_OPTIONS.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  isSelected={activeFilters.color === option.value}
-                  onClick={() => toggleSingleSelect("color", option.value as SearchFilters["color"])}
-                />
-              ))}
-            </div>
-          </FilterSection>
-
-          {/* 材料（複数選択可） */}
-          <FilterSection title="材料" subtitle="複数選択可（AND条件）">
-            {isLoadingIngredients ? (
-              <div className="text-sm text-foreground/50">読み込み中...</div>
-            ) : (
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                {ingredients.map((ingredient) => (
+            {/* ベース */}
+            <FilterSection title="ベース">
+              <div className="flex flex-wrap gap-2">
+                {BASE_OPTIONS.map((option) => (
                   <FilterChip
-                    key={ingredient.id}
-                    label={ingredient.name}
-                    isSelected={activeFilters.ingredientIds?.includes(ingredient.id) || false}
-                    onClick={() => toggleIngredient(ingredient.id)}
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.base === option.value}
+                    onClick={() => toggleSingleSelect("base", option.value as SearchFilters["base"])}
                   />
                 ))}
               </div>
-            )}
-          </FilterSection>
+            </FilterSection>
+
+            {/* 技法 */}
+            <FilterSection title="技法">
+              <div className="flex flex-wrap gap-2">
+                {TECHNIQUE_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.technique === option.value}
+                    onClick={() => toggleSingleSelect("technique", option.value as SearchFilters["technique"])}
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* 度数 */}
+            <FilterSection title="度数">
+              <div className="flex flex-wrap gap-2">
+                {ALCOHOL_STRENGTH_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.alcoholStrength === option.value}
+                    onClick={() =>
+                      toggleSingleSelect("alcoholStrength", option.value as SearchFilters["alcoholStrength"])
+                    }
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* グラス */}
+            <FilterSection title="グラス">
+              <div className="flex flex-wrap gap-2">
+                {GLASS_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.glass === option.value}
+                    onClick={() => toggleSingleSelect("glass", option.value as SearchFilters["glass"])}
+                    icon={<GlassIcon glass={option.value} size={16} />}
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* 冷たさ */}
+            <FilterSection title="冷たさ">
+              <div className="flex flex-wrap gap-2">
+                {TEMPERATURE_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.temperature === option.value}
+                    onClick={() => toggleSingleSelect("temperature", option.value as SearchFilters["temperature"])}
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* 炭酸 */}
+            <FilterSection title="炭酸">
+              <div className="flex flex-wrap gap-2">
+                {CARBONATION_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.carbonation === option.value}
+                    onClick={() => toggleSingleSelect("carbonation", option.value as SearchFilters["carbonation"])}
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* カラー */}
+            <FilterSection title="カラー">
+              <div className="flex flex-wrap gap-2">
+                {COLOR_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    label={option.label}
+                    isSelected={activeFilters.color === option.value}
+                    onClick={() => toggleSingleSelect("color", option.value as SearchFilters["color"])}
+                  />
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* 材料（複数選択可） - プルダウン形式 */}
+            <FilterSection title="材料" subtitle="複数選択可（AND条件）">
+              {isLoadingIngredients ? (
+                <div className="text-sm text-foreground/50">読み込み中...</div>
+              ) : (
+                <IngredientMultiSelect
+                  ingredients={ingredients}
+                  selectedIds={activeFilters.ingredientIds || []}
+                  onToggle={toggleIngredient}
+                />
+              )}
+            </FilterSection>
+          </div>
         </div>
 
-        {/* フッター：アクションボタン */}
-        <div className="flex items-center justify-between pt-4 border-t border-border/30">
+        {/* フッター（固定）：アクションボタン */}
+        <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t border-border/30">
           <Button
             variant="ghost"
             onClick={clearFilters}
@@ -314,5 +325,165 @@ export function SearchModal() {
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * 材料の複数選択プルダウン
+ */
+function IngredientMultiSelect({
+  ingredients,
+  selectedIds,
+  onToggle,
+}: {
+  ingredients: { id: string; name: string; category: string | null }[]
+  selectedIds: string[]
+  onToggle: (id: string) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // 外側クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isOpen])
+
+  // 検索でフィルタリング
+  const filteredIngredients = useMemo(() => {
+    if (!searchTerm) return ingredients
+    const term = searchTerm.toLowerCase()
+    return ingredients.filter((ing) => ing.name.toLowerCase().includes(term))
+  }, [ingredients, searchTerm])
+
+  // 選択中の材料名を取得
+  const selectedNames = useMemo(() => {
+    return selectedIds
+      .map((id) => ingredients.find((ing) => ing.id === id)?.name)
+      .filter(Boolean)
+  }, [selectedIds, ingredients])
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      {/* トリガーボタン */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-all",
+          "border focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50",
+          "bg-card border-border/30 hover:border-gold/30",
+          isOpen && "border-gold/50"
+        )}
+      >
+        <span className={cn("truncate", selectedIds.length === 0 && "text-foreground/50")}>
+          {selectedIds.length === 0
+            ? "材料を選択..."
+            : selectedIds.length === 1
+              ? selectedNames[0]
+              : `${selectedIds.length}件選択中`}
+        </span>
+        <ChevronDown
+          className={cn(
+            "w-4 h-4 text-foreground/40 transition-transform",
+            isOpen && "rotate-180"
+          )}
+        />
+      </button>
+
+      {/* 選択中のタグ表示 */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {selectedNames.map((name, index) => (
+            <span
+              key={selectedIds[index]}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-gold/20 text-gold border border-gold/30"
+            >
+              {name}
+              <button
+                type="button"
+                onClick={() => onToggle(selectedIds[index])}
+                className="hover:text-gold/70"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* ドロップダウンメニュー */}
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-card border border-border/30 rounded-lg shadow-lg">
+          {/* 検索入力 */}
+          <div className="p-2 border-b border-border/30">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/40" />
+              <input
+                type="text"
+                placeholder="材料名で検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-7 pr-2 py-1.5 text-sm bg-transparent border-none focus:outline-none placeholder:text-foreground/40"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* 選択肢一覧 */}
+          <div className="max-h-48 overflow-y-auto">
+            {filteredIngredients.length === 0 ? (
+              <div className="px-3 py-4 text-sm text-foreground/50 text-center">
+                該当する材料がありません
+              </div>
+            ) : (
+              filteredIngredients.map((ingredient) => {
+                const isSelected = selectedIds.includes(ingredient.id)
+                return (
+                  <button
+                    key={ingredient.id}
+                    type="button"
+                    onClick={() => onToggle(ingredient.id)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
+                      "hover:bg-gold/10",
+                      isSelected && "bg-gold/5"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-4 h-4 flex items-center justify-center rounded border transition-colors",
+                        isSelected
+                          ? "bg-gold border-gold text-background"
+                          : "border-border/50"
+                      )}
+                    >
+                      {isSelected && <Check className="w-3 h-3" />}
+                    </span>
+                    <span className={cn(isSelected && "text-gold")}>{ingredient.name}</span>
+                    {ingredient.category && (
+                      <span className="ml-auto text-xs text-foreground/40">
+                        {ingredient.category}
+                      </span>
+                    )}
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

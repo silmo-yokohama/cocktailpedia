@@ -3,7 +3,7 @@
 import { ArrowLeft, Droplets, Flame, Sparkles, Wine } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { incrementViewCount } from "@/actions/cocktails"
 import { Badge } from "@/components/atoms/Badge"
@@ -37,16 +37,28 @@ interface CocktailDetailClientProps {
  */
 export function CocktailDetailClient({ cocktail }: CocktailDetailClientProps) {
   const { isFavorite, toggleFavorite, isLoaded: isFavoritesLoaded } = useFavorites()
-  const { addToHistory } = useRecentlyViewed()
+  const { addToHistory, isInHistory, isLoaded: isHistoryLoaded } = useRecentlyViewed()
+
+  // 処理済みフラグ（無限ループ防止）
+  const processedRef = useRef(false)
 
   // マウント時に閲覧カウントを更新し、履歴に追加
   useEffect(() => {
-    // 閲覧カウントを非同期で更新（ページ表示をブロックしない）
-    incrementViewCount(cocktail.id).catch(console.error)
+    // 履歴の読み込みが完了するまで待機
+    if (!isHistoryLoaded) return
 
-    // 閲覧履歴に追加
+    // 既に処理済みの場合はスキップ
+    if (processedRef.current) return
+    processedRef.current = true
+
+    // 履歴に含まれていない場合のみ閲覧カウントを更新（重複加算の抑止）
+    if (!isInHistory(cocktail.id)) {
+      incrementViewCount(cocktail.id).catch(console.error)
+    }
+
+    // 閲覧履歴に追加（既存の場合は先頭に移動）
     addToHistory(cocktail.id)
-  }, [cocktail.id, addToHistory])
+  }, [cocktail.id, addToHistory, isInHistory, isHistoryLoaded])
 
   // ラベルの取得
   const baseLabel = getLabel(BASE_OPTIONS, cocktail.base)
