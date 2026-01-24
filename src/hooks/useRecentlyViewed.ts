@@ -69,11 +69,22 @@ export function useRecentlyViewed() {
    */
   const getRecentlyViewedIds = useCallback(() => recentlyViewed, [recentlyViewed])
 
+  /**
+   * 指定したIDが閲覧履歴に含まれているかチェック
+   * @param id チェックするカクテルID
+   * @returns 履歴に含まれている場合はtrue
+   */
+  const isInHistory = useCallback(
+    (id: string) => recentlyViewed.includes(id),
+    [recentlyViewed]
+  )
+
   return {
     recentlyViewed,
     addToHistory,
     clearHistory,
     getRecentlyViewedIds,
+    isInHistory,
     isLoaded,
   }
 }

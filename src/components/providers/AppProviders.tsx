@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { Suspense, type ReactNode } from "react"
 
 import { SearchModal } from "@/components/organisms/SearchModal"
 import { SearchModalProvider } from "@/contexts/SearchModalContext"
@@ -16,8 +16,10 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <SearchModalProvider>
       {children}
-      {/* グローバルな検索モーダル */}
-      <SearchModal />
+      {/* グローバルな検索モーダル - useSearchParamsを使用しているためSuspenseでラップ */}
+      <Suspense fallback={null}>
+        <SearchModal />
+      </Suspense>
     </SearchModalProvider>
   )
 }
