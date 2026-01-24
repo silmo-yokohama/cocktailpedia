@@ -6,7 +6,11 @@ import Link from "next/link"
 import { useEffect } from "react"
 
 import { incrementViewCount } from "@/actions/cocktails"
+import { Badge } from "@/components/atoms/Badge"
+import { CornerDecoration } from "@/components/atoms/CornerDecoration"
+import { SectionTitle } from "@/components/atoms/SectionTitle"
 import { FavoriteButton } from "@/components/molecules/FavoriteButton"
+import { InfoCard } from "@/components/molecules/InfoCard"
 import { useFavorites, useRecentlyViewed } from "@/hooks"
 import type { CocktailWithRecipe } from "@/types"
 import {
@@ -216,71 +220,5 @@ export function CocktailDetailClient({ cocktail }: CocktailDetailClientProps) {
         </div>
       </div>
     </article>
-  )
-}
-
-/**
- * セクションタイトル
- */
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <h2 className="text-lg font-medium text-foreground">{children}</h2>
-      <div className="flex-1 h-px bg-gradient-to-r from-gold/30 to-transparent" />
-    </div>
-  )
-}
-
-/**
- * バッジコンポーネント
- */
-function Badge({
-  icon,
-  label,
-  value,
-}: {
-  icon?: React.ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border/30">
-      {icon && <span className="text-gold/60">{icon}</span>}
-      <span className="text-xs text-foreground/50">{label}:</span>
-      <span className="text-sm font-medium text-foreground">{value}</span>
-    </div>
-  )
-}
-
-/**
- * 情報カードコンポーネント
- */
-function InfoCard({
-  icon,
-  label,
-  value,
-}: {
-  icon?: React.ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex flex-col items-center p-4 rounded-lg bg-card border border-border/30 text-center">
-      {icon && <span className="text-gold/50 mb-2">{icon}</span>}
-      <span className="text-xs text-foreground/50 mb-1">{label}</span>
-      <span className="text-sm font-medium text-foreground">{value}</span>
-    </div>
-  )
-}
-
-/**
- * Art Deco風コーナー装飾
- */
-function CornerDecoration() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-gold/30">
-      <path d="M0 0L32 0L32 4L4 4L4 32L0 32L0 0Z" fill="currentColor" />
-      <path d="M8 8L24 8L24 10L10 10L10 24L8 24L8 8Z" fill="currentColor" opacity="0.5" />
-    </svg>
   )
 }

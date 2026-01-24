@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { getCocktailsByIds } from "@/actions/cocktails"
+import { SectionTitle } from "@/components/atoms/SectionTitle"
 import { CocktailCard } from "@/components/molecules/CocktailCard"
 import { useRecentlyViewed } from "@/hooks"
 import { cn } from "@/lib/utils"
@@ -66,10 +67,7 @@ export function RecentlyViewedSection({ favoriteIds = new Set(), onFavoriteToggl
   return (
     <section className={cn("", className)}>
       {/* セクションヘッダー */}
-      <div className="flex items-center gap-4 mb-6">
-        <h2 className="text-lg font-medium text-foreground">最近見たカクテル</h2>
-        <div className="flex-1 h-px bg-gradient-to-r from-gold/20 to-transparent" />
-      </div>
+      <SectionTitle>最近見たカクテル</SectionTitle>
 
       {/* カクテル一覧（横スクロール） */}
       <div className="relative">

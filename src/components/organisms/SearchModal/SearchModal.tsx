@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { getSearchableIngredients } from "@/actions/cocktails"
+import { FilterChip } from "@/components/molecules/FilterChip"
+import { FilterSection } from "@/components/molecules/FilterSection"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -311,61 +313,6 @@ export function SearchModal() {
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
-/**
- * フィルターセクション
- */
-function FilterSection({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string
-  subtitle?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline gap-2 mb-3">
-        <h3 className="text-sm font-medium text-foreground/80">{title}</h3>
-        {subtitle && <span className="text-xs text-foreground/50">{subtitle}</span>}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-/**
- * フィルターチップ
- */
-function FilterChip({
-  label,
-  isSelected,
-  onClick,
-  icon,
-}: {
-  label: string
-  isSelected: boolean
-  onClick: () => void
-  icon?: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full transition-all",
-        "border focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50",
-        isSelected
-          ? "bg-gold/20 border-gold/40 text-gold"
-          : "bg-card border-border/30 text-foreground/70 hover:border-gold/30 hover:text-foreground"
-      )}
-    >
-      {icon && <span className="w-4 h-4">{icon}</span>}
-      {label}
-    </button>
   )
 }
 

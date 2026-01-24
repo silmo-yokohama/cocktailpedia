@@ -3,9 +3,11 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback } from "react"
 
+import { DecorativeDivider } from "@/components/atoms/DecorativeDivider"
+import { FilterBadges } from "@/components/molecules/FilterBadges"
+import { SortSelect } from "@/components/molecules/SortSelect"
 import { CocktailList } from "@/components/organisms/CocktailList"
 import { RecentlyViewedSection } from "@/components/organisms/RecentlyViewedSection"
-import { SortSelect } from "@/components/molecules/SortSelect"
 import { useFavorites } from "@/hooks"
 import type { Cocktail, SearchFilters, SortOptionValue } from "@/types"
 import { isEmptyFilters } from "@/types"
@@ -75,20 +77,7 @@ export function HomeClient({
         </p>
 
         {/* Art Deco風の装飾 */}
-        <div className="flex items-center justify-center mt-8">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/40" />
-          <svg width="40" height="20" viewBox="0 0 40 20" fill="none" className="mx-4">
-            <path
-              d="M20 0L27 10L20 20L13 10L20 0Z"
-              fill="none"
-              stroke="oklch(0.75 0.14 75)"
-              strokeWidth="1"
-              opacity="0.5"
-            />
-            <circle cx="20" cy="10" r="3" fill="oklch(0.75 0.14 75)" opacity="0.3" />
-          </svg>
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/40" />
-        </div>
+        <DecorativeDivider variant="centered" className="mt-8" />
       </section>
 
       {/* 最近見たカクテル */}
@@ -136,63 +125,6 @@ export function HomeClient({
           onFavoriteToggle={toggleFavorite}
         />
       </section>
-    </div>
-  )
-}
-
-/**
- * 検索条件を表示するバッジコンポーネント
- */
-function FilterBadges({
-  filters,
-  className,
-}: {
-  filters: SearchFilters
-  className?: string
-}) {
-  // 各フィルターをバッジとして表示
-  const badges: { label: string; value: string }[] = []
-
-  if (filters.keyword) {
-    badges.push({ label: "キーワード", value: filters.keyword })
-  }
-  if (filters.base) {
-    badges.push({ label: "ベース", value: filters.base })
-  }
-  if (filters.technique) {
-    badges.push({ label: "技法", value: filters.technique })
-  }
-  if (filters.glass) {
-    badges.push({ label: "グラス", value: filters.glass })
-  }
-  if (filters.temperature) {
-    badges.push({ label: "冷たさ", value: filters.temperature })
-  }
-  if (filters.carbonation) {
-    badges.push({ label: "炭酸", value: filters.carbonation })
-  }
-  if (filters.color) {
-    badges.push({ label: "カラー", value: filters.color })
-  }
-  if (filters.alcoholStrength) {
-    badges.push({ label: "度数", value: filters.alcoholStrength })
-  }
-
-  if (badges.length === 0) return null
-
-  return (
-    <div className={className}>
-      <div className="flex flex-wrap gap-2">
-        {badges.map((badge) => (
-          <span
-            key={badge.label}
-            className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-gold/10 text-gold/80 border border-gold/20"
-          >
-            <span className="text-gold/50">{badge.label}:</span>
-            <span>{badge.value}</span>
-          </span>
-        ))}
-      </div>
     </div>
   )
 }

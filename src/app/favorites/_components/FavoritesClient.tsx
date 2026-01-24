@@ -1,10 +1,11 @@
 "use client"
 
-import Link from "next/link"
 import { Search, Heart } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+import { DecorativeDivider } from "@/components/atoms/DecorativeDivider"
 import { CocktailCard } from "@/components/molecules/CocktailCard"
+import { EmptyState, EmptyGlassIcon } from "@/components/molecules/EmptyState"
 import { SortSelect } from "@/components/molecules/SortSelect"
 import { Input } from "@/components/ui/input"
 import { useFavorites } from "@/hooks"
@@ -134,32 +135,7 @@ export function FavoritesClient() {
         </p>
 
         {/* Art Deco風の装飾 */}
-        <div className="flex items-center justify-center mt-8">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/40" />
-          <svg
-            width="40"
-            height="20"
-            viewBox="0 0 40 20"
-            fill="none"
-            className="mx-4"
-          >
-            <path
-              d="M20 0L27 10L20 20L13 10L20 0Z"
-              fill="none"
-              stroke="oklch(0.75 0.14 75)"
-              strokeWidth="1"
-              opacity="0.5"
-            />
-            <circle
-              cx="20"
-              cy="10"
-              r="3"
-              fill="oklch(0.75 0.14 75)"
-              opacity="0.3"
-            />
-          </svg>
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/40" />
-        </div>
+        <DecorativeDivider variant="centered" className="mt-8" />
       </section>
 
       {/* ローディング状態 */}
@@ -184,7 +160,15 @@ export function FavoritesClient() {
       )}
 
       {/* お気に入りが0件の場合（空状態） */}
-      {!isLoading && !error && favorites.size === 0 && <EmptyState />}
+      {!isLoading && !error && favorites.size === 0 && (
+        <EmptyState
+          title="お気に入りがまだありません"
+          description="気になるカクテルを見つけたら、ハートボタンを押してお気に入りに追加しましょう。"
+          actionLabel="カクテルを探す"
+          actionHref="/"
+          icon={<EmptyGlassIcon />}
+        />
+      )}
 
       {/* お気に入りがある場合 */}
       {!isLoading && !error && favorites.size > 0 && (
@@ -244,93 +228,6 @@ export function FavoritesClient() {
           )}
         </section>
       )}
-    </div>
-  )
-}
-
-/**
- * お気に入りが空の場合の表示
- */
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      {/* イラスト：空のグラス */}
-      <div className="relative w-24 h-32 mb-8">
-        {/* カクテルグラスのSVG */}
-        <svg
-          viewBox="0 0 100 140"
-          fill="none"
-          className="w-full h-full"
-        >
-          {/* グラス本体 */}
-          <path
-            d="M15 10L50 80L85 10"
-            stroke="oklch(0.75 0.14 75 / 0.3)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* グラスの縁 */}
-          <ellipse
-            cx="50"
-            cy="10"
-            rx="35"
-            ry="5"
-            stroke="oklch(0.75 0.14 75 / 0.3)"
-            strokeWidth="2"
-            fill="none"
-          />
-          {/* ステム */}
-          <line
-            x1="50"
-            y1="80"
-            x2="50"
-            y2="115"
-            stroke="oklch(0.75 0.14 75 / 0.3)"
-            strokeWidth="2"
-          />
-          {/* ベース */}
-          <ellipse
-            cx="50"
-            cy="120"
-            rx="20"
-            ry="4"
-            stroke="oklch(0.75 0.14 75 / 0.3)"
-            strokeWidth="2"
-            fill="none"
-          />
-          {/* ハートのアイコン（破線） */}
-          <path
-            d="M50 35 C40 25, 25 30, 30 45 C35 55, 50 65, 50 65 C50 65, 65 55, 70 45 C75 30, 60 25, 50 35"
-            stroke="oklch(0.75 0.14 75 / 0.2)"
-            strokeWidth="1.5"
-            strokeDasharray="3 3"
-            fill="none"
-          />
-        </svg>
-      </div>
-
-      <h2 className="text-xl font-semibold text-foreground mb-2">
-        お気に入りがまだありません
-      </h2>
-      <p className="text-muted-foreground mb-8 max-w-md">
-        気になるカクテルを見つけたら、ハートボタンを押してお気に入りに追加しましょう。
-      </p>
-
-      {/* カクテルを探すボタン */}
-      <Link
-        href="/"
-        className={cn(
-          "inline-flex items-center gap-2 px-6 py-3 rounded-lg",
-          "bg-gold/10 text-gold border border-gold/30",
-          "hover:bg-gold/20 hover:border-gold/50",
-          "transition-all duration-200",
-          "font-medium"
-        )}
-      >
-        <Search className="w-4 h-4" />
-        カクテルを探す
-      </Link>
     </div>
   )
 }
