@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { getSearchableIngredients } from "@/actions/cocktails"
+import { GlassIcon } from "@/components/atoms/icons"
 import { FilterChip } from "@/components/molecules/FilterChip"
 import { FilterSection } from "@/components/molecules/FilterSection"
 import { Button } from "@/components/ui/button"
@@ -226,7 +227,7 @@ export function SearchModal() {
                   label={option.label}
                   isSelected={activeFilters.glass === option.value}
                   onClick={() => toggleSingleSelect("glass", option.value as SearchFilters["glass"])}
-                  icon={<GlassIcon glass={option.value} />}
+                  icon={<GlassIcon glass={option.value} size={16} />}
                 />
               ))}
             </div>
@@ -314,66 +315,4 @@ export function SearchModal() {
       </DialogContent>
     </Dialog>
   )
-}
-
-/**
- * グラスアイコン
- */
-function GlassIcon({ glass }: { glass: string }) {
-  // シンプルなSVGアイコンで各グラスを表現
-  const iconMap: Record<string, React.ReactNode> = {
-    cocktail: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M8 2L12 12V22M12 22H8M12 22H16M4 2H20L12 12L4 2Z" />
-      </svg>
-    ),
-    rocks: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M5 5H19V19H5V5Z" />
-        <path d="M8 5V2M16 5V2" />
-      </svg>
-    ),
-    highball: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M6 2H18V22H6V2Z" />
-      </svg>
-    ),
-    collins: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M7 2H17V22H7V2Z" />
-      </svg>
-    ),
-    champagne_flute: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M10 2H14L13 14V22M11 14V22M9 22H15" />
-      </svg>
-    ),
-    champagne_saucer: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M4 6H20L18 10H6L4 6ZM12 10V20M8 20H16" />
-      </svg>
-    ),
-    wine: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M8 2H16L15 10C15 12 13.5 14 12 14C10.5 14 9 12 9 10L8 2ZM12 14V20M8 20H16" />
-      </svg>
-    ),
-    shot: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M8 8H16V20H8V8Z" />
-      </svg>
-    ),
-    copper_mug: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M6 4H16V20H6V4ZM16 8H20V16H16" />
-      </svg>
-    ),
-    goblet: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M7 2H17L16 10C16 12 14 14 12 14C10 14 8 12 8 10L7 2ZM12 14V18M7 18H17V22H7V18Z" />
-      </svg>
-    ),
-  }
-
-  return iconMap[glass] || null
 }

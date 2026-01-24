@@ -4,6 +4,7 @@ import { Heart, Menu, Search } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
+import { ArtDecoLine, StarIcon } from "@/components/atoms/icons"
 import { Logo } from "@/components/atoms/Logo"
 import { Button } from "@/components/ui/button"
 import {
@@ -152,9 +153,7 @@ export function Header({ className }: HeaderProps) {
                   {/* ヘッダー装飾 */}
                   <div className="flex items-center gap-3 mb-8">
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/30" />
-                    <svg width="12" height="12" viewBox="0 0 12 12" className="text-gold/50">
-                      <path d="M6 0L7.5 4.5L12 6L7.5 7.5L6 12L4.5 7.5L0 6L4.5 4.5L6 0Z" fill="currentColor" />
-                    </svg>
+                    <StarIcon size={12} points={4} className="text-gold/50" />
                     <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/30" />
                   </div>
 
@@ -213,12 +212,7 @@ export function Header({ className }: HeaderProps) {
 
                   {/* フッター装飾 */}
                   <div className="flex flex-col items-center gap-4 pt-6">
-                    <svg width="60" height="24" viewBox="0 0 60 24" fill="none" className="text-gold/15">
-                      <path d="M0 12H20" stroke="currentColor" strokeWidth="0.5" />
-                      <path d="M30 4L35 12L30 20L25 12L30 4Z" stroke="currentColor" strokeWidth="0.5" />
-                      <circle cx="30" cy="12" r="2" fill="currentColor" />
-                      <path d="M40 12H60" stroke="currentColor" strokeWidth="0.5" />
-                    </svg>
+                    <ArtDecoLine width={60} height={24} variant="simple" className="text-gold/15" />
                     <p
                       className="text-[9px] tracking-[0.3em] text-gold/20"
                       style={{ fontFamily: "'Playfair Display', Georgia, serif" }}

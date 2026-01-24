@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { ArtDecoLine, StarIcon } from "@/components/atoms/icons"
 import { Logo } from "@/components/atoms/Logo"
 import { cn } from "@/lib/utils"
 
@@ -30,18 +31,7 @@ export function Footer({ className }: FooterProps) {
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-4">
             <div className="h-px w-12 md:w-24 bg-gradient-to-r from-transparent to-gold/30" />
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="text-gold/40"
-            >
-              <path
-                d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z"
-                fill="currentColor"
-              />
-            </svg>
+            <StarIcon size={24} points={8} className="text-gold/40" />
             <div className="h-px w-12 md:w-24 bg-gradient-to-l from-transparent to-gold/30" />
           </div>
         </div>
@@ -84,45 +74,7 @@ export function Footer({ className }: FooterProps) {
 
         {/* Art Deco風の装飾（下部） */}
         <div className="flex items-center justify-center mt-8">
-          <svg
-            width="120"
-            height="20"
-            viewBox="0 0 120 20"
-            fill="none"
-            className="opacity-20"
-          >
-            {/* 中央のダイヤモンド */}
-            <path
-              d="M60 0L67 10L60 20L53 10L60 0Z"
-              stroke="oklch(0.75 0.14 75)"
-              strokeWidth="1"
-              fill="none"
-            />
-            {/* 左側の装飾 */}
-            <path
-              d="M0 10H50"
-              stroke="oklch(0.75 0.14 75)"
-              strokeWidth="1"
-            />
-            <circle
-              cx="25"
-              cy="10"
-              r="2"
-              fill="oklch(0.75 0.14 75)"
-            />
-            {/* 右側の装飾 */}
-            <path
-              d="M70 10H120"
-              stroke="oklch(0.75 0.14 75)"
-              strokeWidth="1"
-            />
-            <circle
-              cx="95"
-              cy="10"
-              r="2"
-              fill="oklch(0.75 0.14 75)"
-            />
-          </svg>
+          <ArtDecoLine width={120} height={20} variant="with-circles" className="opacity-20" />
         </div>
       </div>
     </footer>
