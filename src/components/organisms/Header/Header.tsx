@@ -2,6 +2,7 @@
 
 import { Heart, Menu, Search } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import { Logo } from "@/components/atoms/Logo"
@@ -27,10 +28,16 @@ interface HeaderProps {
  * ロゴ、ベース別ナビ、お気に入り・検索アイコンを含む
  */
 export function Header({ className }: HeaderProps) {
+  const pathname = usePathname()
   // 検索モーダルの状態を取得
   const { open: openSearchModal } = useSearchModal()
   // モバイルメニューの開閉状態
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // 管理画面では公開ヘッダーを表示しない
+  if (pathname.startsWith("/admin")) {
+    return null
+  }
 
   return (
     <header
