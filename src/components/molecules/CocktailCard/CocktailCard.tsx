@@ -5,6 +5,12 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { FavoriteButton } from "@/components/molecules/FavoriteButton"
+import {
+  WaterDropIcon,
+  FireIcon,
+  CardCornerDecoration,
+  SmallDiamondIcon,
+} from "@/components/atoms/icons/DecorationIcons"
 import { cn } from "@/lib/utils"
 import type { Cocktail } from "@/types"
 import { getLabel, BASE_OPTIONS, ALCOHOL_STRENGTH_OPTIONS } from "@/types"
@@ -60,13 +66,7 @@ function AlcoholIndicator({ level }: { level: number }) {
   if (level === 0) {
     return (
       <div className="flex items-center gap-0.5" title="ノンアルコール">
-        <svg
-          viewBox="0 0 16 16"
-          className="w-3.5 h-3.5 text-blue-400"
-          fill="currentColor"
-        >
-          <path d="M8 1a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 5.293V1.5A.5.5 0 0 1 8 1zM4 8a4 4 0 1 1 8 0c0 2.5-2 4.5-4 6.5C6 12.5 4 10.5 4 8z" />
-        </svg>
+        <WaterDropIcon className="w-3.5 h-3.5 text-blue-400" />
       </div>
     )
   }
@@ -75,17 +75,13 @@ function AlcoholIndicator({ level }: { level: number }) {
   return (
     <div className="flex items-center gap-0" title={`度数: ${{1: "弱", 2: "中", 3: "高"}[level]}`}>
       {Array.from({ length: 3 }).map((_, i) => (
-        <svg
+        <FireIcon
           key={i}
-          viewBox="0 0 16 16"
           className={cn(
             "w-3 h-3 transition-colors",
             i < level ? "text-amber-500" : "text-foreground/20"
           )}
-          fill="currentColor"
-        >
-          <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15z" />
-        </svg>
+        />
       ))}
     </div>
   )
@@ -183,32 +179,10 @@ export function CocktailCard({
 
           {/* Art Deco風の装飾コーナー（ホバー時） */}
           <div className="absolute top-0 left-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
-              <path
-                d="M0 0L32 0L32 4L4 4L4 32L0 32L0 0Z"
-                fill="oklch(0.75 0.14 75)"
-                opacity="0.6"
-              />
-              <path
-                d="M0 0L16 0L16 2L2 2L2 16L0 16L0 0Z"
-                fill="oklch(0.85 0.12 75)"
-                opacity="0.4"
-              />
-            </svg>
+            <CardCornerDecoration />
           </div>
           <div className="absolute top-0 right-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 -scale-x-100">
-            <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
-              <path
-                d="M0 0L32 0L32 4L4 4L4 32L0 32L0 0Z"
-                fill="oklch(0.75 0.14 75)"
-                opacity="0.6"
-              />
-              <path
-                d="M0 0L16 0L16 2L2 2L2 16L0 16L0 0Z"
-                fill="oklch(0.85 0.12 75)"
-                opacity="0.4"
-              />
-            </svg>
+            <CardCornerDecoration />
           </div>
         </div>
 
@@ -246,9 +220,7 @@ export function CocktailCard({
           {/* Art Deco風の区切り線 */}
           <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/20">
             <div className="flex-1 h-px bg-gradient-to-r from-gold/30 to-transparent" />
-            <svg width="12" height="6" viewBox="0 0 12 6" className="text-gold/40">
-              <path d="M6 0L9 3L6 6L3 3L6 0Z" fill="currentColor" />
-            </svg>
+            <SmallDiamondIcon className="text-gold/40" />
             <div className="flex-1 h-px bg-gradient-to-l from-gold/30 to-transparent" />
           </div>
         </div>

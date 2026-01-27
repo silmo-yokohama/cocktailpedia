@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/atoms/icons/HeroIcons"
 
 /**
  * ページネーションコンポーネント

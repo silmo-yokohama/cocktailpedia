@@ -5,6 +5,7 @@ import { CocktailsTable } from "./_components/CocktailsTable"
 import { SearchInput } from "./_components/SearchInput"
 import { Pagination } from "./_components/Pagination"
 import { Button } from "@/components/ui/button"
+import { PlusIcon, SearchIcon } from "@/components/atoms/icons/HeroIcons"
 
 /**
  * カクテル一覧画面のプロパティ
@@ -37,20 +38,7 @@ export default async function CocktailsPage({ searchParams }: CocktailsPageProps
         </div>
         <Link href="/admin/cocktails/new">
           <Button className="w-full sm:w-auto">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="mr-2 h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
+            <PlusIcon size={16} className="mr-2" />
             新規登録
           </Button>
         </Link>
@@ -116,20 +104,7 @@ function EmptyState({ search }: { search: string }) {
   return (
     <div className="rounded-lg border border-border/50 bg-card p-12 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="h-6 w-6 text-muted-foreground"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-          />
-        </svg>
+        <SearchIcon size={24} className="text-muted-foreground" />
       </div>
       <h3 className="mt-4 text-lg font-medium text-foreground">
         {search ? "検索結果がありません" : "カクテルがありません"}
