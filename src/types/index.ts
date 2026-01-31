@@ -17,6 +17,7 @@ export type {
   CocktailRecipeResponse,
   GeminiCandidate,
   GeminiResponse,
+  ResolvedIngredient,
 } from "./ai"
 
 // 定数・選択肢

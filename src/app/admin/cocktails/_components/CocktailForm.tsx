@@ -12,7 +12,13 @@ import {
   type CocktailFormData,
 } from "@/actions/admin"
 import { fetchCocktailRecipe } from "@/actions/ai-cocktail"
-import type { Cocktail, Ingredient, RecipeItem, AIIngredientInput } from "@/types"
+import type {
+  Cocktail,
+  Ingredient,
+  RecipeItem,
+  AIIngredientInput,
+  ResolvedIngredient,
+} from "@/types"
 import {
   BASE_OPTIONS,
   TECHNIQUE_OPTIONS,
@@ -37,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { RecipeItemsField } from "./RecipeItemsField"
+import { UnmatchedIngredientsDialog } from "./UnmatchedIngredientsDialog"
 
 /** デフォルト画像のURL */
 const DEFAULT_IMAGE = "/images/cocktail-placeholder.svg"
@@ -129,10 +136,14 @@ export function CocktailForm({
     }))
   )
 
-  // 未登録材料の状態（Task 3で使用）
+  // 未登録材料の状態
   const [unmatchedIngredients, setUnmatchedIngredients] = useState<
     AIIngredientInput[]
   >([])
+  // 未登録材料ダイアログの表示状態
+  const [showUnmatchedDialog, setShowUnmatchedDialog] = useState(false)
+  // 材料リストの状態（ダイアログ完了後に更新するため）
+  const [currentIngredients, setCurrentIngredients] = useState<Ingredient[]>(ingredients)
 
   /**
    * 画像ドロップ時の処理
@@ -228,24 +239,25 @@ export function CocktailForm({
       setSelectValue("color", recipe.color || "__unset__")
 
       // 材料マッチング処理
-      const matchResult = matchIngredients(recipe.ingredients, ingredients)
+      const matchResult = matchIngredients(recipe.ingredients, currentIngredients)
 
       // マッチした材料をレシピ項目に追加
       const newRecipeItems = createRecipeItemsFromMatchResult(matchResult)
       setCurrentRecipeItems(newRecipeItems)
 
-      // 未登録材料を保存（Task 3で使用）
+      // 未登録材料を保存
       setUnmatchedIngredients(matchResult.unmatched)
 
-      // 結果をトーストで通知
+      // 結果をトーストで通知＆ダイアログ表示
       if (matchResult.unmatched.length > 0) {
-        toast.warning(
-          `カクテル情報を入力しました。${matchResult.unmatched.length}件の材料がマスタに登録されていません。`,
+        toast.info(
+          `カクテル情報を入力しました。${matchResult.unmatched.length}件の未登録材料を処理してください。`,
           {
-            description: matchResult.unmatched.map((i) => i.name).join(", "),
-            duration: 6000,
+            duration: 4000,
           }
         )
+        // 未登録材料ダイアログを表示
+        setShowUnmatchedDialog(true)
       } else {
         toast.success("カクテル情報を自動入力しました")
       }
@@ -383,6 +395,45 @@ export function CocktailForm({
 
     setIsSubmitting(false)
   }
+
+  /**
+   * 未登録材料ダイアログの完了処理
+   * 解決済みの材料をレシピ項目に追加し、材料リストを更新
+   */
+  const handleUnmatchedComplete = useCallback(
+    (resolved: ResolvedIngredient[]) => {
+      // 解決済み材料をレシピ項目に追加
+      const newItems = resolved.map((item, index) => ({
+        ingredient_id: item.ingredientId,
+        amount: item.amount || "",
+        sort_order: currentRecipeItems.length + index,
+      }))
+
+      setCurrentRecipeItems((prev) => [...prev, ...newItems])
+
+      // 新規作成された材料を材料リストに追加（選択肢用）
+      const newIngredients = resolved
+        .filter((r) => r.isNewlyCreated)
+        .map((r) => ({
+          id: r.ingredientId,
+          name: r.originalName,
+          name_en: null,
+          category: null,
+          is_searchable: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }))
+
+      if (newIngredients.length > 0) {
+        setCurrentIngredients((prev) => [...prev, ...newIngredients])
+      }
+
+      // 未登録材料リストをクリア
+      setUnmatchedIngredients([])
+      setShowUnmatchedDialog(false)
+    },
+    [currentRecipeItems.length]
+  )
 
   /**
    * URLスラッグを自動生成
@@ -527,13 +578,23 @@ export function CocktailForm({
                 />
               </svg>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                未登録の材料があります
-              </p>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  未登録の材料があります
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUnmatchedDialog(true)}
+                  className="h-7 border-amber-500/30 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-400"
+                >
+                  処理する
+                </Button>
+              </div>
               <p className="text-xs text-amber-600/80 dark:text-amber-400/80">
                 以下の材料は材料マスタに登録されていないため、レシピに追加されていません。
-                材料マスタに登録後、手動で追加してください。
               </p>
               <ul className="mt-2 flex flex-wrap gap-2">
                 {unmatchedIngredients.map((ingredient, index) => (
@@ -773,7 +834,7 @@ export function CocktailForm({
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground">レシピ（材料）</h2>
         <RecipeItemsField
-          ingredients={ingredients}
+          ingredients={currentIngredients}
           items={currentRecipeItems}
           onChange={setCurrentRecipeItems}
         />
@@ -843,6 +904,15 @@ export function CocktailForm({
               : "登録する"}
         </Button>
       </div>
+
+      {/* 未登録材料処理ダイアログ */}
+      <UnmatchedIngredientsDialog
+        open={showUnmatchedDialog}
+        onOpenChange={setShowUnmatchedDialog}
+        unmatchedIngredients={unmatchedIngredients}
+        masterIngredients={currentIngredients}
+        onComplete={handleUnmatchedComplete}
+      />
     </form>
   )
 }
