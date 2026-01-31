@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useDropzone } from "react-dropzone"
 import Image from "next/image"
@@ -11,7 +11,8 @@ import {
   uploadCocktailImage,
   type CocktailFormData,
 } from "@/actions/admin"
-import type { Cocktail, Ingredient, RecipeItem } from "@/types"
+import { fetchCocktailRecipe } from "@/actions/ai-cocktail"
+import type { Cocktail, Ingredient, RecipeItem, AIIngredientInput } from "@/types"
 import {
   BASE_OPTIONS,
   TECHNIQUE_OPTIONS,
@@ -20,6 +21,10 @@ import {
   CARBONATION_OPTIONS,
   COLOR_OPTIONS,
 } from "@/types/constants"
+import {
+  matchIngredients,
+  createRecipeItemsFromMatchResult,
+} from "@/lib/ingredient-matcher"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,6 +52,54 @@ interface CocktailFormProps {
 }
 
 /**
+ * AI自動入力ボタンのスピナーアイコン
+ */
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  )
+}
+
+/**
+ * AI自動入力ボタンのスパークルアイコン
+ */
+function SparklesIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+/**
  * カクテル登録/編集フォームコンポーネント
  */
 export function CocktailForm({
@@ -56,10 +109,12 @@ export function CocktailForm({
 }: CocktailFormProps) {
   const router = useRouter()
   const isEdit = !!cocktail
+  const formRef = useRef<HTMLFormElement>(null)
 
   // フォーム状態
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isAiLoading, setIsAiLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState(cocktail?.image_url || "")
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -73,6 +128,11 @@ export function CocktailForm({
       sort_order: index,
     }))
   )
+
+  // 未登録材料の状態（Task 3で使用）
+  const [unmatchedIngredients, setUnmatchedIngredients] = useState<
+    AIIngredientInput[]
+  >([])
 
   /**
    * 画像ドロップ時の処理
@@ -118,6 +178,148 @@ export function CocktailForm({
   })
 
   /**
+   * AI自動入力ボタン押下時の処理
+   */
+  const handleAiAutoFill = async () => {
+    if (!formRef.current) return
+
+    // カクテル名を取得
+    const nameInput = formRef.current.querySelector<HTMLInputElement>(
+      'input[name="name"]'
+    )
+    const cocktailName = nameInput?.value?.trim()
+
+    // バリデーション
+    if (!cocktailName) {
+      toast.error("カクテル名を入力してください")
+      nameInput?.focus()
+      return
+    }
+
+    setIsAiLoading(true)
+
+    try {
+      // API呼び出し
+      const result = await fetchCocktailRecipe(cocktailName)
+
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      const recipe = result.data
+
+      // 各フィールドに値をセット
+      setFormValue("name", recipe.name)
+      setFormValue("name_en", recipe.name_en || "")
+      setFormValue("name_alias", recipe.name_alias || "")
+      setFormValue("slug", recipe.slug)
+      setFormValue("description", recipe.description || "")
+      setFormValue("cocktail_word", recipe.cocktail_word || "")
+      setFormValue("alcohol_percentage", recipe.alcohol_percentage.toString())
+      setFormValue("variation_text", recipe.variation_text || "")
+
+      // セレクトボックスの値をセット
+      setSelectValue("base", recipe.base)
+      setSelectValue("technique", recipe.technique)
+      setSelectValue("glass", recipe.glass)
+      setSelectValue("temperature", recipe.temperature)
+      setSelectValue("carbonation", recipe.carbonation)
+      setSelectValue("color", recipe.color || "__unset__")
+
+      // 材料マッチング処理
+      const matchResult = matchIngredients(recipe.ingredients, ingredients)
+
+      // マッチした材料をレシピ項目に追加
+      const newRecipeItems = createRecipeItemsFromMatchResult(matchResult)
+      setCurrentRecipeItems(newRecipeItems)
+
+      // 未登録材料を保存（Task 3で使用）
+      setUnmatchedIngredients(matchResult.unmatched)
+
+      // 結果をトーストで通知
+      if (matchResult.unmatched.length > 0) {
+        toast.warning(
+          `カクテル情報を入力しました。${matchResult.unmatched.length}件の材料がマスタに登録されていません。`,
+          {
+            description: matchResult.unmatched.map((i) => i.name).join(", "),
+            duration: 6000,
+          }
+        )
+      } else {
+        toast.success("カクテル情報を自動入力しました")
+      }
+    } catch (error) {
+      console.error("AI自動入力エラー:", error)
+      toast.error("エラーが発生しました。時間を置いて再度お試しください")
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  /**
+   * フォームのinput要素に値をセットするヘルパー
+   */
+  const setFormValue = (name: string, value: string) => {
+    if (!formRef.current) return
+    const input = formRef.current.querySelector<
+      HTMLInputElement | HTMLTextAreaElement
+    >(`[name="${name}"]`)
+    if (input) {
+      input.value = value
+    }
+  }
+
+  /**
+   * shadcn/ui Selectの値をセットするヘルパー
+   *
+   * shadcn/uiのSelectはRadix UIベースでhidden inputを使用しているため、
+   * triggerボタンをクリックしてから値をセットする必要がある
+   */
+  const setSelectValue = (name: string, value: string) => {
+    if (!formRef.current) return
+
+    // hidden inputに直接値をセット
+    const hiddenInput = formRef.current.querySelector<HTMLInputElement>(
+      `input[name="${name}"]`
+    )
+    if (hiddenInput) {
+      // inputのvalueを更新
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value"
+      )?.set
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(hiddenInput, value)
+        // changeイベントを発火してReactに通知
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }))
+      }
+    }
+
+    // SelectTrigger内のテキストを更新するため、一度クリックしてから閉じる
+    // これはRadix UIの仕様上、直接DOMを操作する必要があるため
+    const trigger = formRef.current.querySelector<HTMLButtonElement>(
+      `#${name}`
+    )
+    if (trigger) {
+      // data-valueを更新してUIを反映
+      trigger.click()
+      // ポップオーバーが開いたら該当の項目をクリック
+      setTimeout(() => {
+        const item = document.querySelector<HTMLDivElement>(
+          `[data-value="${value}"]`
+        )
+        if (item) {
+          item.click()
+        } else {
+          // 閉じるために外側をクリック
+          document.body.click()
+        }
+      }, 50)
+    }
+  }
+
+  /**
    * フォーム送信
    */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -140,7 +342,10 @@ export function CocktailForm({
       alcohol_percentage: Number(formData.get("alcohol_percentage")),
       temperature: formData.get("temperature") as string,
       carbonation: formData.get("carbonation") as string,
-      color: ((formData.get("color") as string) === "__unset__" ? undefined : formData.get("color") as string) || undefined,
+      color:
+        (formData.get("color") as string) === "__unset__"
+          ? undefined
+          : (formData.get("color") as string) || undefined,
       variation_text: (formData.get("variation_text") as string) || undefined,
       image_url: imageUrl || undefined,
       recipeItems: currentRecipeItems.filter((item) => item.ingredient_id),
@@ -198,10 +403,38 @@ export function CocktailForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
       {/* 基本情報セクション */}
       <section className="space-y-6">
-        <h2 className="text-lg font-semibold text-foreground">基本情報</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">基本情報</h2>
+
+          {/* AI自動入力ボタン（新規登録時のみ表示） */}
+          {!isEdit && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAiAutoFill}
+              disabled={isAiLoading || isSubmitting}
+              className="group relative overflow-hidden border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5 text-amber-700 transition-all hover:border-amber-500/50 hover:from-amber-500/10 hover:to-orange-500/10 hover:text-amber-600 dark:border-amber-400/30 dark:text-amber-400 dark:hover:border-amber-400/50 dark:hover:text-amber-300"
+            >
+              {/* グラデーションのアニメーション背景 */}
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-500/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+              {isAiLoading ? (
+                <>
+                  <SpinnerIcon className="h-4 w-4 animate-spin" />
+                  <span>読み込み中...</span>
+                </>
+              ) : (
+                <>
+                  <SparklesIcon className="h-4 w-4" />
+                  <span>AIで自動入力</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
           {/* カクテル名 */}
@@ -227,6 +460,11 @@ export function CocktailForm({
                 }
               }}
             />
+            {!isEdit && (
+              <p className="text-xs text-muted-foreground">
+                カクテル名を入力して「AIで自動入力」ボタンを押すと、レシピ情報を自動取得できます
+              </p>
+            )}
           </div>
 
           {/* URLスラッグ */}
@@ -270,6 +508,52 @@ export function CocktailForm({
           </div>
         </div>
       </section>
+
+      {/* 未登録材料の警告表示 */}
+      {unmatchedIngredients.length > 0 && (
+        <section className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-3.5 w-3.5"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                未登録の材料があります
+              </p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/80">
+                以下の材料は材料マスタに登録されていないため、レシピに追加されていません。
+                材料マスタに登録後、手動で追加してください。
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {unmatchedIngredients.map((ingredient, index) => (
+                  <li
+                    key={index}
+                    className="inline-flex items-center rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-700 dark:text-amber-400"
+                  >
+                    {ingredient.name}
+                    {ingredient.amount && (
+                      <span className="ml-1 text-amber-600/60 dark:text-amber-400/60">
+                        ({ingredient.amount})
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 画像セクション */}
       <section className="space-y-4">
@@ -549,7 +833,7 @@ export function CocktailForm({
         >
           キャンセル
         </Button>
-        <Button type="submit" disabled={isSubmitting || isUploading}>
+        <Button type="submit" disabled={isSubmitting || isUploading || isAiLoading}>
           {isSubmitting
             ? isEdit
               ? "更新中..."

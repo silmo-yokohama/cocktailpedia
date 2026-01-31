@@ -13,10 +13,10 @@ import type { CocktailRecipeResponse, GeminiResponse } from "@/types"
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 /** テキスト生成に使用するモデル */
-const TEXT_MODEL = "gemini-2.5-flash-preview-05-20"
+const TEXT_MODEL = "gemini-2.5-flash"
 
-/** 画像生成に使用するモデル */
-const IMAGE_MODEL = "gemini-2.5-flash-preview-05-20"
+/** 画像生成に使用するモデル（Task 4で使用） */
+const IMAGE_MODEL = "gemini-2.5-flash-image"
 
 /** 最大リトライ回数 */
 const MAX_RETRIES = 2
