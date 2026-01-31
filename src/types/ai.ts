@@ -111,6 +111,25 @@ export interface ActionError {
 export type ActionResult<T> = ActionSuccess<T> | ActionError
 
 // ============================================
+// 未登録材料処理の型定義
+// ============================================
+
+/**
+ * 解決済み材料情報
+ * 未登録材料ダイアログで処理された材料の結果
+ */
+export interface ResolvedIngredient {
+  /** AIが返した元の名前 */
+  originalName: string
+  /** 紐付けする材料ID（既存 or 新規作成） */
+  ingredientId: string
+  /** 分量 */
+  amount: string | null
+  /** 新規作成したかどうか */
+  isNewlyCreated: boolean
+}
+
+// ============================================
 // 内部処理用の型定義
 // ============================================
 
