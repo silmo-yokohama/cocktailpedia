@@ -6,6 +6,19 @@
 // データベース型
 export type { Cocktail, CocktailWithRecipe, Ingredient, RecipeItem, SiteSetting } from "./database"
 
+// AI関連の型
+export type {
+  ActionError,
+  ActionResult,
+  ActionSuccess,
+  AIErrorResponse,
+  AIErrorType,
+  AIIngredientInput,
+  CocktailRecipeResponse,
+  GeminiCandidate,
+  GeminiResponse,
+} from "./ai"
+
 // 定数・選択肢
 export {
   ALCOHOL_STRENGTH_OPTIONS,
