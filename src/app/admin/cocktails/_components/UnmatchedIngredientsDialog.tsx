@@ -7,7 +7,7 @@
  * 既存材料の選択または新規登録を行い、レシピへの紐付けを可能にする。
  */
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
 import { createIngredient } from "@/actions/ingredients"
 import type {
@@ -171,17 +171,23 @@ export function UnmatchedIngredientsDialog({
   onComplete,
 }: UnmatchedIngredientsDialogProps) {
   // 各材料の解決状態を管理
-  const [resolutions, setResolutions] = useState<IngredientResolution[]>(() =>
-    unmatchedIngredients.map((ingredient) => ({
-      original: ingredient,
-      mode: "new" as const, // デフォルトは新規登録
-      existingId: null,
-      newName: ingredient.name,
-      newCategory: ingredient.category,
-    }))
-  )
-
+  const [resolutions, setResolutions] = useState<IngredientResolution[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // ダイアログが開かれた時、または未登録材料が変更された時にresolutionsを更新
+  useEffect(() => {
+    if (open && unmatchedIngredients.length > 0) {
+      setResolutions(
+        unmatchedIngredients.map((ingredient) => ({
+          original: ingredient,
+          mode: "new" as const, // デフォルトは新規登録
+          existingId: null,
+          newName: ingredient.name,
+          newCategory: ingredient.category,
+        }))
+      )
+    }
+  }, [open, unmatchedIngredients])
 
   /**
    * 処理モードを変更
