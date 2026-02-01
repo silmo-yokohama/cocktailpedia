@@ -196,10 +196,9 @@ export async function generateCocktailImageAction(
 
     // 3. Supabase Storageにアップロード
     const supabase = createServerClient()
-    const fileName = `${AI_IMAGE_DIR}/${slug}.png`
-
-    // 既存ファイルがあれば削除（上書き用）
-    await supabase.storage.from(IMAGE_BUCKET).remove([fileName])
+    // タイムスタンプを追加して一意なファイル名を生成
+    const timestamp = Date.now()
+    const fileName = `${AI_IMAGE_DIR}/${slug}_${timestamp}.png`
 
     const { error: uploadError } = await supabase.storage
       .from(IMAGE_BUCKET)
@@ -254,6 +253,70 @@ export async function generateCocktailImageAction(
       success: false,
       error: "api_error",
       message: "画像の生成に失敗しました。画像なしで続行してください",
+    }
+  }
+}
+
+/**
+ * Supabase Storageから画像を削除する
+ *
+ * @param imageUrl 削除する画像のURL
+ * @returns 削除結果
+ */
+export async function deleteCocktailImageAction(
+  imageUrl: string
+): Promise<ActionResult<void>> {
+  try {
+    // 入力バリデーション
+    if (!imageUrl) {
+      return {
+        success: false,
+        error: "validation_error",
+        message: "削除する画像が指定されていません",
+      }
+    }
+
+    // URLからファイルパスを抽出
+    // 例: https://xxx.supabase.co/storage/v1/object/public/cocktail-images/ai-generated/gin-tonic_123456.png
+    const urlParts = imageUrl.split(`/storage/v1/object/public/${IMAGE_BUCKET}/`)
+    if (urlParts.length !== 2) {
+      console.warn("画像URLの形式が不正です:", imageUrl)
+      // Storageの画像でない場合は成功として扱う（削除不要）
+      return {
+        success: true,
+        data: undefined,
+      }
+    }
+
+    const filePath = urlParts[1]
+    console.log(`画像削除: ${filePath}`)
+
+    // Supabase Storageから削除
+    const supabase = createServerClient()
+    const { error: deleteError } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .remove([filePath])
+
+    if (deleteError) {
+      console.error("画像の削除に失敗しました:", deleteError)
+      return {
+        success: false,
+        error: "api_error",
+        message: "画像の削除に失敗しました",
+      }
+    }
+
+    console.log(`画像削除完了: ${filePath}`)
+    return {
+      success: true,
+      data: undefined,
+    }
+  } catch (error) {
+    console.error("deleteCocktailImageAction エラー:", error)
+    return {
+      success: false,
+      error: "api_error",
+      message: "画像の削除に失敗しました",
     }
   }
 }

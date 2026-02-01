@@ -11,7 +11,7 @@ import {
   uploadCocktailImage,
   type CocktailFormData,
 } from "@/actions/admin"
-import { fetchCocktailRecipe, generateCocktailImageAction } from "@/actions/ai-cocktail"
+import { fetchCocktailRecipe, generateCocktailImageAction, deleteCocktailImageAction } from "@/actions/ai-cocktail"
 import type {
   Cocktail,
   Ingredient,
@@ -123,6 +123,7 @@ export function CocktailForm({
   const [isUploading, setIsUploading] = useState(false)
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [isImageGenerating, setIsImageGenerating] = useState(false)
+  const [isImageDeleting, setIsImageDeleting] = useState(false)
   const [imageUrl, setImageUrl] = useState(cocktail?.image_url || "")
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -348,6 +349,38 @@ export function CocktailForm({
       toast.error("画像の生成に失敗しました。画像なしで続行できます")
     } finally {
       setIsImageGenerating(false)
+    }
+  }
+
+  /**
+   * 画像削除ボタン押下時の処理
+   */
+  const handleImageDelete = async () => {
+    // 削除対象の画像URLがない場合は何もしない
+    if (!imageUrl) {
+      return
+    }
+
+    setIsImageDeleting(true)
+
+    try {
+      // Supabase Storageから削除
+      const result = await deleteCocktailImageAction(imageUrl)
+
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      // 状態をリセット
+      setImageUrl("")
+      setImagePreview(null)
+      toast.success("画像を削除しました")
+    } catch (error) {
+      console.error("画像削除エラー:", error)
+      toast.error("画像の削除に失敗しました")
+    } finally {
+      setIsImageDeleting(false)
     }
   }
 
@@ -654,19 +687,55 @@ export function CocktailForm({
         <h2 className="text-lg font-semibold text-foreground">画像</h2>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          {/* プレビュー */}
-          <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg bg-muted">
-            <Image
-              src={imagePreview || imageUrl || DEFAULT_IMAGE}
-              alt="プレビュー"
-              fill
-              className="object-cover"
-            />
-            {/* アップロード中またはAI画像生成中のオーバーレイ */}
-            {(isUploading || isImageGenerating) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
-              </div>
+          {/* プレビューと削除ボタン */}
+          <div className="flex flex-col gap-2">
+            <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg bg-muted">
+              <Image
+                src={imagePreview || imageUrl || DEFAULT_IMAGE}
+                alt="プレビュー"
+                fill
+                className="object-cover"
+              />
+              {/* アップロード中、AI画像生成中、または削除中のオーバーレイ */}
+              {(isUploading || isImageGenerating || isImageDeleting) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+                </div>
+              )}
+            </div>
+            {/* 画像が設定されている場合のみ削除ボタンを表示 */}
+            {(imageUrl || imagePreview) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImageDelete}
+                disabled={isImageDeleting || isUploading || isImageGenerating || isSubmitting}
+                className="w-40 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                {isImageDeleting ? (
+                  <>
+                    <SpinnerIcon className="h-3 w-3 animate-spin" />
+                    <span>削除中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.519.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>画像を削除</span>
+                  </>
+                )}
+              </Button>
             )}
           </div>
 
