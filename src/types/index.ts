@@ -16,6 +16,9 @@ export type {
   AIIngredientInput,
   CocktailRecipeResponse,
   GeminiCandidate,
+  GeminiImageCandidate,
+  GeminiImageResponse,
+  GeminiInlineData,
   GeminiResponse,
   ResolvedIngredient,
 } from "./ai"
