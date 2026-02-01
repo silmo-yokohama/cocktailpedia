@@ -137,6 +137,16 @@ export function CocktailForm({
     }))
   )
 
+  // セレクトボックスの状態（制御コンポーネント化）
+  const [selectValues, setSelectValues] = useState({
+    base: cocktail?.base || "gin",
+    technique: cocktail?.technique || "build",
+    glass: cocktail?.glass || "highball",
+    temperature: cocktail?.temperature || "ice",
+    carbonation: cocktail?.carbonation || "weak",
+    color: cocktail?.color || "__unset__",
+  })
+
   // 未登録材料の状態
   const [unmatchedIngredients, setUnmatchedIngredients] = useState<
     AIIngredientInput[]
@@ -231,13 +241,15 @@ export function CocktailForm({
       setFormValue("alcohol_percentage", recipe.alcohol_percentage.toString())
       setFormValue("variation_text", recipe.variation_text || "")
 
-      // セレクトボックスの値をセット
-      setSelectValue("base", recipe.base)
-      setSelectValue("technique", recipe.technique)
-      setSelectValue("glass", recipe.glass)
-      setSelectValue("temperature", recipe.temperature)
-      setSelectValue("carbonation", recipe.carbonation)
-      setSelectValue("color", recipe.color || "__unset__")
+      // セレクトボックスの値をセット（制御コンポーネントなのでstateを更新）
+      setSelectValues({
+        base: recipe.base,
+        technique: recipe.technique,
+        glass: recipe.glass,
+        temperature: recipe.temperature,
+        carbonation: recipe.carbonation,
+        color: recipe.color || "__unset__",
+      })
 
       // 材料マッチング処理
       const matchResult = matchIngredients(recipe.ingredients, currentIngredients)
@@ -349,55 +361,6 @@ export function CocktailForm({
     >(`[name="${name}"]`)
     if (input) {
       input.value = value
-    }
-  }
-
-  /**
-   * shadcn/ui Selectの値をセットするヘルパー
-   *
-   * shadcn/uiのSelectはRadix UIベースでhidden inputを使用しているため、
-   * triggerボタンをクリックしてから値をセットする必要がある
-   */
-  const setSelectValue = (name: string, value: string) => {
-    if (!formRef.current) return
-
-    // hidden inputに直接値をセット
-    const hiddenInput = formRef.current.querySelector<HTMLInputElement>(
-      `input[name="${name}"]`
-    )
-    if (hiddenInput) {
-      // inputのvalueを更新
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value"
-      )?.set
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(hiddenInput, value)
-        // changeイベントを発火してReactに通知
-        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }))
-      }
-    }
-
-    // SelectTrigger内のテキストを更新するため、一度クリックしてから閉じる
-    // これはRadix UIの仕様上、直接DOMを操作する必要があるため
-    const trigger = formRef.current.querySelector<HTMLButtonElement>(
-      `#${name}`
-    )
-    if (trigger) {
-      // data-valueを更新してUIを反映
-      trigger.click()
-      // ポップオーバーが開いたら該当の項目をクリック
-      setTimeout(() => {
-        const item = document.querySelector<HTMLDivElement>(
-          `[data-value="${value}"]`
-        )
-        if (item) {
-          item.click()
-        } else {
-          // 閉じるために外側をクリック
-          document.body.click()
-        }
-      }, 50)
     }
   }
 
@@ -788,7 +751,14 @@ export function CocktailForm({
             <Label htmlFor="base">
               ベース <span className="text-destructive">*</span>
             </Label>
-            <Select name="base" defaultValue={cocktail?.base || "gin"} required>
+            <Select
+              name="base"
+              value={selectValues.base}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, base: value }))
+              }
+              required
+            >
               <SelectTrigger id="base">
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
@@ -809,7 +779,10 @@ export function CocktailForm({
             </Label>
             <Select
               name="technique"
-              defaultValue={cocktail?.technique || "build"}
+              value={selectValues.technique}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, technique: value }))
+              }
               required
             >
               <SelectTrigger id="technique">
@@ -832,7 +805,10 @@ export function CocktailForm({
             </Label>
             <Select
               name="glass"
-              defaultValue={cocktail?.glass || "highball"}
+              value={selectValues.glass}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, glass: value }))
+              }
               required
             >
               <SelectTrigger id="glass">
@@ -871,7 +847,10 @@ export function CocktailForm({
             </Label>
             <Select
               name="temperature"
-              defaultValue={cocktail?.temperature || "ice"}
+              value={selectValues.temperature}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, temperature: value }))
+              }
               required
             >
               <SelectTrigger id="temperature">
@@ -894,7 +873,10 @@ export function CocktailForm({
             </Label>
             <Select
               name="carbonation"
-              defaultValue={cocktail?.carbonation || "weak"}
+              value={selectValues.carbonation}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, carbonation: value }))
+              }
               required
             >
               <SelectTrigger id="carbonation">
@@ -913,7 +895,13 @@ export function CocktailForm({
           {/* カラー */}
           <div className="space-y-2">
             <Label htmlFor="color">カラー</Label>
-            <Select name="color" defaultValue={cocktail?.color || "__unset__"}>
+            <Select
+              name="color"
+              value={selectValues.color}
+              onValueChange={(value) =>
+                setSelectValues((prev) => ({ ...prev, color: value }))
+              }
+            >
               <SelectTrigger id="color">
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
