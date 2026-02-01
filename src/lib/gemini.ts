@@ -134,15 +134,15 @@ JSONのみを返してください。説明文は不要です。`
 function buildImagePrompt(name: string, glass: string, color: string): string {
   return `A photorealistic product photography of "${name}" cocktail.
 
-Glass type: ${glass} glass
-Cocktail color: ${color}
-Style: Professional studio photography with soft lighting
-Background: Clean, minimalist bar counter with subtle bokeh
-Angle: Slightly elevated 45-degree angle
-Details: Condensation on glass, appropriate garnish if applicable
-Quality: High resolution, sharp focus on the cocktail
+Subject: Single ${glass} glass containing ${color} colored cocktail
+Composition: Cocktail glass centered in the frame, main subject takes up 60-70% of the image
+Background: Authentic dimly-lit bar atmosphere with dark wood counter, warm ambient lighting, bokeh of bar bottles and shelves in the background
+Lighting: Dramatic side lighting highlighting the glass, warm tungsten tones
+Angle: Slightly elevated 45-degree angle, eye-level with the rim of the glass
+Details: Condensation droplets on glass, appropriate garnish if applicable, ice cubes visible if relevant
+Quality: High resolution, sharp focus on the cocktail, shallow depth of field
 
-Do not include any text or labels in the image.`
+IMPORTANT: No people, no hands, no text, no labels in the image. Only the cocktail glass on the bar counter.`
 }
 
 // ============================================
