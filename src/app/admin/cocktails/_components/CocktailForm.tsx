@@ -318,19 +318,16 @@ export function CocktailForm({
 
     // 色が未設定の場合はクリアにする
     const effectiveColor = color === "__unset__" ? "clear" : color
-    // ベースの種類を取得（代表的なスピリッツの場合はボトルも一緒に生成）
-    const base = selectValues.base
 
     setIsImageGenerating(true)
 
     try {
-      // API呼び出し
+      // API呼び出し（カクテル名から代表的な銘柄をAIが判断）
       const result = await generateCocktailImageAction(
         name,
         slug,
         glass,
-        effectiveColor,
-        base
+        effectiveColor
       )
 
       if (!result.success) {
