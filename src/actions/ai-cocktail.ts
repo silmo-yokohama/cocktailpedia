@@ -66,6 +66,26 @@ async function isCocktailNameExists(cocktailName: string): Promise<boolean> {
   return data !== null
 }
 
+/**
+ * 全ての材料名を取得する（表記揺れ対策用）
+ * @returns 材料名の配列
+ */
+async function getAllIngredientNames(): Promise<string[]> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase
+    .from("ingredients")
+    .select("name")
+    .order("name")
+
+  if (error) {
+    console.error("材料リストの取得に失敗しました:", error)
+    return []
+  }
+
+  return data?.map((item) => item.name) ?? []
+}
+
 // ============================================
 // Server Actions
 // ============================================
@@ -103,8 +123,11 @@ export async function fetchCocktailRecipe(
       }
     }
 
-    // Gemini APIを呼び出し
-    const result = await generateCocktailRecipe(cocktailName.trim())
+    // 表記揺れ対策: 既存の材料名リストを取得
+    const existingIngredients = await getAllIngredientNames()
+
+    // Gemini APIを呼び出し（既存材料リストを渡す）
+    const result = await generateCocktailRecipe(cocktailName.trim(), existingIngredients)
 
     // unknown_cocktail エラーのチェック
     if ("error" in result && result.error === "unknown_cocktail") {

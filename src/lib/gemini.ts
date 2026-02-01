@@ -13,10 +13,10 @@ import type { CocktailRecipeResponse, GeminiResponse, GeminiImageResponse } from
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 /** テキスト生成に使用するモデル */
-const TEXT_MODEL = "gemini-2.5-flash"
+const TEXT_MODEL = "gemini-3-flash-preview"
 
-/** 画像生成に使用するモデル（Task 4で使用） */
-const IMAGE_MODEL = "gemini-2.5-flash-image"
+/** 画像生成に使用するモデル */
+const IMAGE_MODEL = "gemini-3-pro-image-preview"
 
 /** 最大リトライ回数 */
 const MAX_RETRIES = 2
@@ -89,9 +89,21 @@ const RECIPE_JSON_SCHEMA = `{
 /**
  * カクテルレシピ取得用のプロンプトを生成
  * @param cocktailName カクテル名
+ * @param existingIngredients 既存の材料名リスト（表記揺れ対策用）
  * @returns プロンプト文字列
  */
-function buildRecipePrompt(cocktailName: string): string {
+function buildRecipePrompt(cocktailName: string, existingIngredients?: string[]): string {
+  // 既存材料リストのセクション（存在する場合のみ追加）
+  const ingredientListSection = existingIngredients && existingIngredients.length > 0
+    ? `
+【既存材料リスト】
+以下の材料名がすでに登録されています。可能な限りこのリストから選択してください。
+リストにない材料のみ新しい名前を使用してください。
+
+${existingIngredients.join(", ")}
+`
+    : ""
+
   return `あなたはカクテルのプロです。
 以下のカクテル名について、レシピ情報をJSON形式で返してください。
 
@@ -101,7 +113,7 @@ function buildRecipePrompt(cocktailName: string): string {
 - 各フィールドの許容値は指定されたもののみ使用してください
 - 材料名は一般名称を使用してください（商品名は使わない）
 - 情報を持っていないカクテルの場合は {"error": "unknown_cocktail"} を返してください
-
+${ingredientListSection}
 【カクテル名】
 ${cocktailName}
 
@@ -360,12 +372,14 @@ function extractAndParseJSON<T>(text: string): T {
 /**
  * カクテルのレシピ情報をAIから取得する
  * @param cocktailName カクテル名
+ * @param existingIngredients 既存の材料名リスト（表記揺れ対策用）
  * @returns カクテルレシピ情報、またはエラー
  */
 export async function generateCocktailRecipe(
-  cocktailName: string
+  cocktailName: string,
+  existingIngredients?: string[]
 ): Promise<CocktailRecipeResponse | { error: "unknown_cocktail" }> {
-  const prompt = buildRecipePrompt(cocktailName)
+  const prompt = buildRecipePrompt(cocktailName, existingIngredients)
 
   // リトライ付きでAPI呼び出し
   const responseText = await retryWithBackoff(() => callGeminiAPI(prompt, TEXT_MODEL))
