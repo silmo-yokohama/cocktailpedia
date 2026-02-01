@@ -120,10 +120,17 @@ JSONのみを返してください。説明文は不要です。`
  * @returns プロンプト文字列
  */
 function buildImagePrompt(name: string, glass: string, color: string): string {
-  return `A professional photograph of ${name} cocktail.
-Served in a ${glass} glass.
-Color: ${color}.
-Beautiful lighting, high quality, appetizing, bar setting.`
+  return `A photorealistic product photography of "${name}" cocktail.
+
+Glass type: ${glass} glass
+Cocktail color: ${color}
+Style: Professional studio photography with soft lighting
+Background: Clean, minimalist bar counter with subtle bokeh
+Angle: Slightly elevated 45-degree angle
+Details: Condensation on glass, appropriate garnish if applicable
+Quality: High resolution, sharp focus on the cocktail
+
+Do not include any text or labels in the image.`
 }
 
 // ============================================
