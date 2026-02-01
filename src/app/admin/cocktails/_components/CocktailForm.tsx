@@ -289,24 +289,19 @@ export function CocktailForm({
   const handleImageGeneration = async () => {
     if (!formRef.current) return
 
-    // 必要な情報を取得
+    // 必要な情報を取得（テキスト入力はDOMから、セレクトはstateから）
     const nameInput = formRef.current.querySelector<HTMLInputElement>(
       'input[name="name"]'
     )
     const slugInput = formRef.current.querySelector<HTMLInputElement>(
       'input[name="slug"]'
     )
-    const glassInput = formRef.current.querySelector<HTMLInputElement>(
-      'input[name="glass"]'
-    )
-    const colorInput = formRef.current.querySelector<HTMLInputElement>(
-      'input[name="color"]'
-    )
 
     const name = nameInput?.value?.trim()
     const slug = slugInput?.value?.trim()
-    const glass = glassInput?.value || "highball"
-    const color = colorInput?.value || "clear"
+    // セレクトボックスの値はstateから取得（DOMからは取得できない）
+    const glass = selectValues.glass
+    const color = selectValues.color
 
     // バリデーション
     if (!name) {
