@@ -10,6 +10,16 @@ import { generateCocktailRecipe, generateCocktailImage } from "@/lib/gemini"
 import type { ActionResult, CocktailRecipeResponse } from "@/types"
 
 // ============================================
+// 定数（画像生成用）
+// ============================================
+
+/** 画像保存用バケット名 */
+const IMAGE_BUCKET = "cocktail-images"
+
+/** AI生成画像の保存先ディレクトリ */
+const AI_IMAGE_DIR = "ai-generated"
+
+// ============================================
 // 定数
 // ============================================
 
@@ -150,42 +160,93 @@ export async function fetchCocktailRecipe(
 /**
  * カクテル画像をAIで生成してStorageに保存する
  *
- * Task 4で本実装予定。現時点ではスタブ。
- *
  * @param name カクテル名
+ * @param slug URLスラッグ（ファイル名に使用）
  * @param glass グラスの種類
  * @param color カクテルの色
  * @returns 生成された画像のURL、またはエラー
  */
 export async function generateCocktailImageAction(
   name: string,
+  slug: string,
   glass: string,
   color: string
 ): Promise<ActionResult<string>> {
   try {
-    // TODO: Task 4で実装
-    // 1. generateCocktailImage でBase64画像を取得
-    // 2. Supabase Storageにアップロード
-    // 3. 公開URLを返す
+    // 入力バリデーション
+    if (!name || !slug || !glass || !color) {
+      return {
+        success: false,
+        error: "validation_error",
+        message: "画像生成に必要な情報が不足しています",
+      }
+    }
 
-    // 現時点ではスタブ
+    // 1. Gemini APIで画像を生成（Base64形式）
+    console.log(`画像生成開始: ${name} (${slug})`)
     const imageBase64 = await generateCocktailImage(name, glass, color)
 
-    // スタブなので到達しない
+    // 2. Base64をBlobに変換
+    const binaryString = atob(imageBase64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+    const imageBlob = new Blob([bytes], { type: "image/png" })
+
+    // 3. Supabase Storageにアップロード
+    const supabase = createServerClient()
+    const fileName = `${AI_IMAGE_DIR}/${slug}.png`
+
+    // 既存ファイルがあれば削除（上書き用）
+    await supabase.storage.from(IMAGE_BUCKET).remove([fileName])
+
+    const { error: uploadError } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(fileName, imageBlob, {
+        contentType: "image/png",
+        cacheControl: "3600",
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error("画像のアップロードに失敗しました:", uploadError)
+      return {
+        success: false,
+        error: "api_error",
+        message: "画像の保存に失敗しました。画像なしで続行してください",
+      }
+    }
+
+    // 4. 公開URLを取得
+    const { data: urlData } = supabase.storage
+      .from(IMAGE_BUCKET)
+      .getPublicUrl(fileName)
+
+    console.log(`画像生成完了: ${urlData.publicUrl}`)
+
     return {
       success: true,
-      data: imageBase64,
+      data: urlData.publicUrl,
     }
   } catch (error) {
     console.error("generateCocktailImageAction エラー:", error)
 
     const errorMessage = error instanceof Error ? error.message : String(error)
 
-    if (errorMessage.includes("NOT_IMPLEMENTED")) {
+    if (errorMessage.includes("RATE_LIMIT")) {
+      return {
+        success: false,
+        error: "rate_limit",
+        message: "APIの利用制限に達しました。時間を置いて再度お試しください",
+      }
+    }
+
+    if (errorMessage.includes("UNAUTHORIZED")) {
       return {
         success: false,
         error: "api_error",
-        message: "画像生成機能は現在準備中です",
+        message: "API設定を確認してください",
       }
     }
 

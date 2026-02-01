@@ -3,7 +3,7 @@
  * カクテル情報自動入力機能でGemini APIを呼び出す
  */
 
-import type { CocktailRecipeResponse, GeminiResponse } from "@/types"
+import type { CocktailRecipeResponse, GeminiResponse, GeminiImageResponse } from "@/types"
 
 // ============================================
 // 定数
@@ -244,6 +244,79 @@ async function callGeminiAPI(prompt: string, model: string): Promise<string> {
 }
 
 /**
+ * Gemini APIを呼び出して画像を生成する
+ * @param prompt 画像生成プロンプト
+ * @returns Base64エンコードされた画像データ
+ */
+async function callGeminiImageAPI(prompt: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY が設定されていません")
+  }
+
+  const url = `${GEMINI_API_URL}/${IMAGE_MODEL}:generateContent?key=${apiKey}`
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        // 画像生成用の設定（IMAGE のみを指定）
+        responseModalities: ["IMAGE"],
+      },
+    }),
+  })
+
+  // HTTPエラーのハンドリング
+  if (!response.ok) {
+    const errorBody = await response.text()
+    console.error("Gemini Image API エラーレスポンス:", errorBody)
+
+    if (response.status === 429) {
+      throw new Error("RATE_LIMIT: レート制限に達しました")
+    }
+    if (response.status === 400) {
+      throw new Error("BAD_REQUEST: リクエストが不正です")
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("UNAUTHORIZED: APIキーが無効または権限がありません")
+    }
+    if (response.status >= 500) {
+      throw new Error("SERVER_ERROR: APIサーバーで問題が発生しました")
+    }
+
+    throw new Error(`API_ERROR: HTTPステータス ${response.status}`)
+  }
+
+  const data = (await response.json()) as GeminiImageResponse
+
+  // レスポンスの検証
+  if (!data.candidates || data.candidates.length === 0) {
+    throw new Error("EMPTY_RESPONSE: レスポンスが空です")
+  }
+
+  const candidate = data.candidates[0]
+  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+    throw new Error("EMPTY_CONTENT: レスポンスのコンテンツが空です")
+  }
+
+  const inlineData = candidate.content.parts[0].inlineData
+  if (!inlineData || !inlineData.data) {
+    throw new Error("NO_IMAGE_DATA: 画像データが含まれていません")
+  }
+
+  return inlineData.data
+}
+
+/**
  * JSONテキストを抽出・パースする
  * Geminiのレスポンスにはマークダウンのコードブロックが含まれる場合がある
  * @param text レスポンステキスト
@@ -303,7 +376,6 @@ export async function generateCocktailRecipe(
 
 /**
  * カクテルの画像をAIで生成する
- * Task 4で実装予定（スタブとして定義）
  * @param name カクテル名
  * @param glass グラスの種類
  * @param color カクテルの色
@@ -314,10 +386,11 @@ export async function generateCocktailImage(
   glass: string,
   color: string
 ): Promise<string> {
-  // TODO: Task 4で実装
-  // 現時点ではスタブとしてエラーを返す
   const prompt = buildImagePrompt(name, glass, color)
   console.log("画像生成プロンプト:", prompt)
 
-  throw new Error("NOT_IMPLEMENTED: 画像生成機能はTask 4で実装予定です")
+  // リトライ付きでAPI呼び出し
+  const imageBase64 = await retryWithBackoff(() => callGeminiImageAPI(prompt))
+
+  return imageBase64
 }

@@ -11,7 +11,7 @@ import {
   uploadCocktailImage,
   type CocktailFormData,
 } from "@/actions/admin"
-import { fetchCocktailRecipe } from "@/actions/ai-cocktail"
+import { fetchCocktailRecipe, generateCocktailImageAction } from "@/actions/ai-cocktail"
 import type {
   Cocktail,
   Ingredient,
@@ -122,6 +122,7 @@ export function CocktailForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isAiLoading, setIsAiLoading] = useState(false)
+  const [isImageGenerating, setIsImageGenerating] = useState(false)
   const [imageUrl, setImageUrl] = useState(cocktail?.image_url || "")
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -266,6 +267,75 @@ export function CocktailForm({
       toast.error("エラーが発生しました。時間を置いて再度お試しください")
     } finally {
       setIsAiLoading(false)
+    }
+  }
+
+  /**
+   * 画像自動生成ボタン押下時の処理
+   */
+  const handleImageGeneration = async () => {
+    if (!formRef.current) return
+
+    // 必要な情報を取得
+    const nameInput = formRef.current.querySelector<HTMLInputElement>(
+      'input[name="name"]'
+    )
+    const slugInput = formRef.current.querySelector<HTMLInputElement>(
+      'input[name="slug"]'
+    )
+    const glassInput = formRef.current.querySelector<HTMLInputElement>(
+      'input[name="glass"]'
+    )
+    const colorInput = formRef.current.querySelector<HTMLInputElement>(
+      'input[name="color"]'
+    )
+
+    const name = nameInput?.value?.trim()
+    const slug = slugInput?.value?.trim()
+    const glass = glassInput?.value || "highball"
+    const color = colorInput?.value || "clear"
+
+    // バリデーション
+    if (!name) {
+      toast.error("画像を生成するにはカクテル名を入力してください")
+      nameInput?.focus()
+      return
+    }
+
+    if (!slug) {
+      toast.error("画像を生成するにはURLスラッグを入力してください")
+      slugInput?.focus()
+      return
+    }
+
+    // 色が未設定の場合はクリアにする
+    const effectiveColor = color === "__unset__" ? "clear" : color
+
+    setIsImageGenerating(true)
+
+    try {
+      // API呼び出し
+      const result = await generateCocktailImageAction(
+        name,
+        slug,
+        glass,
+        effectiveColor
+      )
+
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      // 成功時：プレビューとURLをセット
+      setImagePreview(result.data)
+      setImageUrl(result.data)
+      toast.success("画像を生成しました")
+    } catch (error) {
+      console.error("画像生成エラー:", error)
+      toast.error("画像の生成に失敗しました。画像なしで続行できます")
+    } finally {
+      setIsImageGenerating(false)
     }
   }
 
@@ -629,50 +699,80 @@ export function CocktailForm({
               fill
               className="object-cover"
             />
-            {isUploading && (
+            {/* アップロード中またはAI画像生成中のオーバーレイ */}
+            {(isUploading || isImageGenerating) && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
               </div>
             )}
           </div>
 
-          {/* ドロップゾーン */}
-          <div
-            {...getRootProps()}
-            className={`flex-1 cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-              isDragActive
-                ? "border-gold bg-gold/5"
-                : "border-border hover:border-gold/50 hover:bg-muted/50"
-            }`}
-          >
-            <input {...getInputProps()} />
-            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-5 w-5 text-muted-foreground"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                />
-              </svg>
+          {/* ドロップゾーンとボタンのコンテナ */}
+          <div className="flex flex-1 flex-col gap-3">
+            {/* ドロップゾーン */}
+            <div
+              {...getRootProps()}
+              className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                isDragActive
+                  ? "border-gold bg-gold/5"
+                  : "border-border hover:border-gold/50 hover:bg-muted/50"
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="h-5 w-5 text-muted-foreground"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                  />
+                </svg>
+              </div>
+              {isDragActive ? (
+                <p className="text-sm text-gold">ここにドロップ</p>
+              ) : (
+                <>
+                  <p className="text-sm text-foreground">
+                    クリックまたはドラッグ＆ドロップで画像を選択
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPEG, PNG, WebP（最大5MB）
+                  </p>
+                </>
+              )}
             </div>
-            {isDragActive ? (
-              <p className="text-sm text-gold">ここにドロップ</p>
-            ) : (
-              <>
-                <p className="text-sm text-foreground">
-                  クリックまたはドラッグ＆ドロップで画像を選択
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  JPEG, PNG, WebP（最大5MB）
-                </p>
-              </>
+
+            {/* AI画像生成ボタン（新規登録時のみ表示） */}
+            {!isEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleImageGeneration}
+                disabled={isImageGenerating || isUploading || isSubmitting}
+                className="group relative w-full overflow-hidden border-emerald-500/30 bg-gradient-to-r from-emerald-500/5 to-teal-500/5 text-emerald-700 transition-all hover:border-emerald-500/50 hover:from-emerald-500/10 hover:to-teal-500/10 hover:text-emerald-600 dark:border-emerald-400/30 dark:text-emerald-400 dark:hover:border-emerald-400/50 dark:hover:text-emerald-300"
+              >
+                {/* グラデーションのアニメーション背景 */}
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+                {isImageGenerating ? (
+                  <>
+                    <SpinnerIcon className="h-4 w-4 animate-spin" />
+                    <span>画像を生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="h-4 w-4" />
+                    <span>AIで画像を自動生成</span>
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
@@ -894,7 +994,7 @@ export function CocktailForm({
         >
           キャンセル
         </Button>
-        <Button type="submit" disabled={isSubmitting || isUploading || isAiLoading}>
+        <Button type="submit" disabled={isSubmitting || isUploading || isAiLoading || isImageGenerating}>
           {isSubmitting
             ? isEdit
               ? "更新中..."

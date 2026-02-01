@@ -134,7 +134,7 @@ export interface ResolvedIngredient {
 // ============================================
 
 /**
- * Gemini APIのレスポンス候補
+ * Gemini APIのレスポンス候補（テキスト生成用）
  */
 export interface GeminiCandidate {
   content: {
@@ -145,8 +145,38 @@ export interface GeminiCandidate {
 }
 
 /**
- * Gemini APIのレスポンス
+ * Gemini APIのレスポンス（テキスト生成用）
  */
 export interface GeminiResponse {
   candidates: GeminiCandidate[]
+}
+
+/**
+ * Gemini APIの画像データ（インラインデータ）
+ * Note: APIレスポンスはキャメルケース（inlineData, mimeType）
+ */
+export interface GeminiInlineData {
+  /** MIMEタイプ（例: "image/png"） */
+  mimeType: string
+  /** Base64エンコードされた画像データ */
+  data: string
+}
+
+/**
+ * Gemini APIのレスポンス候補（画像生成用）
+ * Note: APIレスポンスはキャメルケース（inlineData）
+ */
+export interface GeminiImageCandidate {
+  content: {
+    parts: { inlineData: GeminiInlineData }[]
+    role: string
+  }
+  finishReason: string
+}
+
+/**
+ * Gemini APIのレスポンス（画像生成用）
+ */
+export interface GeminiImageResponse {
+  candidates: GeminiImageCandidate[]
 }
