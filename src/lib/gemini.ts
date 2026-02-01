@@ -124,17 +124,42 @@ ${RECIPE_JSON_SCHEMA}
 JSONのみを返してください。説明文は不要です。`
 }
 
+/** 代表的なスピリッツ（ボトルを画像に含める対象） */
+const REPRESENTATIVE_SPIRITS = ["gin", "vodka", "rum", "tequila", "whiskey", "brandy"] as const
+
+/** ベースの種類から表示名を取得 */
+const BASE_DISPLAY_NAMES: Record<string, string> = {
+  gin: "Gin",
+  vodka: "Vodka",
+  rum: "Rum",
+  tequila: "Tequila",
+  whiskey: "Whiskey",
+  brandy: "Brandy",
+}
+
 /**
  * 画像生成用のプロンプトを生成
  * @param name カクテル名
  * @param glass グラスの種類
  * @param color カクテルの色
+ * @param base ベースの種類（オプション）
  * @returns プロンプト文字列
  */
-function buildImagePrompt(name: string, glass: string, color: string): string {
+function buildImagePrompt(name: string, glass: string, color: string, base?: string): string {
+  // 代表的なスピリッツの場合はボトルも一緒に写す
+  const isRepresentativeSpirit = base && REPRESENTATIVE_SPIRITS.includes(base as typeof REPRESENTATIVE_SPIRITS[number])
+  const bottleSection = isRepresentativeSpirit
+    ? `A ${BASE_DISPLAY_NAMES[base]} bottle placed slightly behind and to the side of the cocktail glass, partially visible.`
+    : ""
+
+  const subjectDescription = isRepresentativeSpirit
+    ? `${glass} glass containing ${color} colored cocktail with a ${BASE_DISPLAY_NAMES[base!]} bottle in the background`
+    : `Single ${glass} glass containing ${color} colored cocktail`
+
   return `A photorealistic product photography of "${name}" cocktail.
 
-Subject: Single ${glass} glass containing ${color} colored cocktail
+Subject: ${subjectDescription}
+${bottleSection}
 Composition: Cocktail glass centered in the frame, main subject takes up 60-70% of the image
 Background: Authentic dimly-lit bar atmosphere with dark wood counter, warm ambient lighting, bokeh of bar bottles and shelves in the background
 Lighting: Dramatic side lighting highlighting the glass, warm tungsten tones
@@ -142,7 +167,7 @@ Angle: Slightly elevated 45-degree angle, eye-level with the rim of the glass
 Details: Condensation droplets on glass, appropriate garnish if applicable, ice cubes visible if relevant
 Quality: High resolution, sharp focus on the cocktail, shallow depth of field
 
-IMPORTANT: No people, no hands, no text, no labels in the image. Only the cocktail glass on the bar counter.`
+IMPORTANT: No people, no hands, no text, no labels in the image. Only the cocktail glass and bottle (if applicable) on the bar counter.`
 }
 
 // ============================================
@@ -400,14 +425,16 @@ export async function generateCocktailRecipe(
  * @param name カクテル名
  * @param glass グラスの種類
  * @param color カクテルの色
+ * @param base ベースの種類（オプション：代表的なスピリッツの場合はボトルも一緒に生成）
  * @returns Base64エンコードされた画像データ
  */
 export async function generateCocktailImage(
   name: string,
   glass: string,
-  color: string
+  color: string,
+  base?: string
 ): Promise<string> {
-  const prompt = buildImagePrompt(name, glass, color)
+  const prompt = buildImagePrompt(name, glass, color, base)
   console.log("画像生成プロンプト:", prompt)
 
   // リトライ付きでAPI呼び出し

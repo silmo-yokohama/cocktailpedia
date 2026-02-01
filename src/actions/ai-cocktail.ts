@@ -187,13 +187,15 @@ export async function fetchCocktailRecipe(
  * @param slug URLスラッグ（ファイル名に使用）
  * @param glass グラスの種類
  * @param color カクテルの色
+ * @param base ベースの種類（オプション：代表的なスピリッツの場合はボトルも一緒に生成）
  * @returns 生成された画像のURL、またはエラー
  */
 export async function generateCocktailImageAction(
   name: string,
   slug: string,
   glass: string,
-  color: string
+  color: string,
+  base?: string
 ): Promise<ActionResult<string>> {
   try {
     // 入力バリデーション
@@ -207,7 +209,7 @@ export async function generateCocktailImageAction(
 
     // 1. Gemini APIで画像を生成（Base64形式）
     console.log(`画像生成開始: ${name} (${slug})`)
-    const imageBase64 = await generateCocktailImage(name, glass, color)
+    const imageBase64 = await generateCocktailImage(name, glass, color, base)
 
     // 2. Base64をBlobに変換
     const binaryString = atob(imageBase64)
